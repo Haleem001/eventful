@@ -24,6 +24,12 @@ export class Ticket {
   @Column({ type: 'boolean', default: false })
   isScanned: boolean;
 
+  @Column({ type: 'text', nullable: true })
+  qrCode: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  qrToken: string | null;
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'eventeeId' })
   eventee: User;

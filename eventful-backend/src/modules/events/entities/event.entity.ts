@@ -4,9 +4,11 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { Ticket } from '../../tickets/entities/ticket.entity';
 
 @Entity('events')
 export class Event {
@@ -40,6 +42,9 @@ export class Event {
 
   @Column()
   creatorId!: string;
+
+  @OneToMany(() => Ticket, (ticket) => ticket.event)
+  tickets!: Ticket[];
 
   @CreateDateColumn()
   createdAt!: Date;

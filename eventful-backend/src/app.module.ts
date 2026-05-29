@@ -1,7 +1,13 @@
-// src/app.module.ts
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import {
+  ThrottlerModule,
+  ThrottlerGuard,
+  getOptionsToken,
+  getStorageToken,
+  ThrottlerStorage,
+} from '@nestjs/throttler';
+import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -39,7 +45,16 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useFactory: (
+        options: ThrottlerModuleOptions,
+        storage: ThrottlerStorage,
+        reflector: Reflector,
+      ) => new ThrottlerGuard(options, storage, reflector),
+      inject: [getOptionsToken(), getStorageToken(), Reflector],
+    },
+    {
+      provide: Reflector,
+      useValue: new Reflector(),
     },
   ],
 })

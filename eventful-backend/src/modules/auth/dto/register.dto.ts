@@ -4,7 +4,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
-  IsNotEmpty
+  IsNotEmpty,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../enums/role.enum';

@@ -3,10 +3,22 @@ import {
   IsString,
   IsNumber,
   IsDateString,
+  IsOptional,
+  IsArray,
+  IsIn,
   Min,
   MaxLength,
+  ArrayMaxSize,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+const REMINDER_OPTIONS = [
+  '1_DAY_BEFORE',
+  '2_DAYS_BEFORE',
+  '1_WEEK_BEFORE',
+  '2_WEEKS_BEFORE',
+  '1_HOUR_BEFORE',
+] as const;
 
 export class CreateEventDto {
   @ApiProperty({
@@ -61,4 +73,15 @@ export class CreateEventDto {
   @IsNumber({}, { message: 'Capacity must be an integer number.' })
   @Min(1, { message: 'Capacity must be at least 1.' })
   capacity!: number;
+
+  @ApiProperty({
+    example: ['1_DAY_BEFORE', '1_WEEK_BEFORE'],
+    description: 'Reminder schedule for the creator before the event date.',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(REMINDER_OPTIONS, { each: true })
+  @ArrayMaxSize(5)
+  reminderConfig?: string[];
 }

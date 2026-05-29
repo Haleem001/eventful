@@ -18,6 +18,7 @@ import { EventsModule } from './modules/events/events.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PaymentModule } from './modules/payments/payment.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     TicketsModule,
     AnalyticsModule,
     NotificationsModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

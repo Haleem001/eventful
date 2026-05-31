@@ -4,6 +4,7 @@ import { LessThanOrEqual, Repository } from 'typeorm';
 import { Interval } from '@nestjs/schedule';
 import { Reminder } from './entities/reminder.entity';
 import { ReminderType } from './enums/reminder-type.enum';
+import { NotificationsService } from './notifications.service';
 
 @Injectable()
 export class RemindersService {
@@ -12,6 +13,7 @@ export class RemindersService {
   constructor(
     @InjectRepository(Reminder)
     private readonly reminderRepository: Repository<Reminder>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -65,8 +67,11 @@ export class RemindersService {
 
     for (const reminder of due) {
       try {
-        this.logger.log(
-          `Sending ${reminder.type} reminder for event "${reminder.event.title}" to user ${reminder.user.email}`,
+        await this.notificationsService.sendReminderEmail(
+          reminder.user.email,
+          reminder.event.title,
+          reminder.event.date,
+          reminder.event.venue,
         );
         await this.reminderRepository.update(reminder.id, { sent: true });
       } catch (error) {

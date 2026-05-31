@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -10,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../auth/enums/role.enum';
@@ -52,6 +55,16 @@ export class EventsController {
     return this.eventsService.findAll();
   }
 
+  @Get('creator')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CREATOR)
+  @ApiOperation({ summary: 'Get events created by the authenticated creator' })
+  @ApiOkResponse({ description: 'Creator events retrieved successfully.' })
+  async findByCreator(@Req() req: any) {
+    return this.eventsService.findByCreator(req.user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get details of a specific event' })
   @ApiOkResponse({ description: 'Event profile retrieved successfully.' })
@@ -60,5 +73,28 @@ export class EventsController {
   })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.eventsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CREATOR)
+  @ApiOperation({ summary: 'Update an event (Creator only)' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @Req() req: any,
+  ) {
+    return this.eventsService.update(id, updateEventDto, req.user.id);
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CREATOR)
+  @ApiOperation({ summary: 'Delete an event (Creator only)' })
+  async remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    await this.eventsService.remove(id, req.user.id);
+    return { message: 'Event deleted successfully.' };
   }
 }

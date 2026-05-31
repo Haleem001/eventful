@@ -1,4 +1,4 @@
-import { Controller, Param, Patch, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, Patch, UseGuards, Req, ParseUUIDPipe } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -18,6 +18,25 @@ import { Role } from '../auth/enums/role.enum';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
+  @Get('user')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user tickets' })
+  @ApiOkResponse({ description: 'User tickets retrieved.' })
+  async findByUser(@Req() req: any) {
+    return this.ticketsService.findByUser(req.user.id);
+  }
+
+  @Get('event/:eventId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CREATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get tickets for a specific event (Creator only)' })
+  @ApiOkResponse({ description: 'Event tickets retrieved.' })
+  async findByEvent(@Param('eventId', ParseUUIDPipe) eventId: string) {
+    return this.ticketsService.findByEvent(eventId);
+  }
+
   @Patch(':id/verify')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CREATOR)
@@ -26,7 +45,7 @@ export class TicketsController {
   @ApiOkResponse({ description: 'Ticket verified successfully.' })
   @ApiBadRequestResponse({ description: 'Ticket already used or not paid.' })
   @ApiNotFoundResponse({ description: 'Ticket not found.' })
-  async verify(@Param('id', ParseUUIDPipe) id: string) {
+  async verify(@Param('id') id: string) {
     return this.ticketsService.verify(id);
   }
 }

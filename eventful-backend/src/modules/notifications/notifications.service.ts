@@ -8,7 +8,9 @@ export class NotificationsService {
   private readonly resend: Resend;
 
   constructor(configService: ConfigService) {
-    this.resend = new Resend(configService.getOrThrow<string>('RESEND_API_KEY'));
+    this.resend = new Resend(
+      configService.getOrThrow<string>('RESEND_API_KEY'),
+    );
   }
 
   async sendReminderEmail(

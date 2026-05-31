@@ -38,8 +38,24 @@ export class TicketsService {
     return this.ticketRepository.save(saved);
   }
 
-  async verify(id: string): Promise<Ticket> {
-    const ticket = await this.findOne(id);
+  async verify(input: string): Promise<Ticket> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
+
+    let ticket = await this.ticketRepository.findOne({
+      where: { reference: input },
+      relations: { event: true },
+    });
+
+    if (!ticket && isUuid) {
+      ticket = await this.ticketRepository.findOne({
+        where: { id: input },
+        relations: { event: true },
+      });
+    }
+
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID or reference "${input}" not found.`);
+    }
 
     if (ticket.status !== TicketStatus.PAID) {
       throw new BadRequestException('Ticket is not in a paid state.');

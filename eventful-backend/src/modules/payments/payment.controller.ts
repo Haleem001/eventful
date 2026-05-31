@@ -51,11 +51,28 @@ export class PaymentController {
     const event = await this.eventsService.findOne(dto.eventId);
     const reference = `evt_${uuidv4().slice(0, 8)}`;
 
-    return this.paymentService.initializePayment(
+    const result = await this.paymentService.initializePayment(
       req.user.email,
       Number(event.price),
       reference,
+      dto.eventId,
+      req.user.id,
+      dto.callbackUrl,
+      dto.reminder,
     );
+
+    return result;
+  }
+
+  @Post('verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Verify a Paystack transaction and create the ticket' })
+  async verify(
+    @Body('reference') reference: string,
+    @Req() req: any,
+  ) {
+    return this.paymentService.verifyPayment(reference, req.user.id);
   }
 
   @Post('webhook')

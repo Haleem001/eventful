@@ -1,5 +1,5 @@
-import { IsUUID, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsUUID, IsNotEmpty, IsOptional, IsString, IsIn } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class InitializePaymentDto {
   @ApiProperty({
@@ -9,4 +9,24 @@ export class InitializePaymentDto {
   @IsUUID()
   @IsNotEmpty()
   eventId: string;
+
+  @ApiPropertyOptional({
+    description:
+      'URL to redirect the user to after payment on Paystack. ' +
+      'Paystack appends ?reference=... to this URL.',
+    example: 'http://localhost:5173/ticket',
+  })
+  @IsOptional()
+  @IsString()
+  callbackUrl?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Reminder timing preference. One of: 1hour, 1day, 1week.',
+    example: '1day',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['1hour', '1day', '1week'])
+  reminder?: string;
 }

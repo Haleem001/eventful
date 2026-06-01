@@ -51,7 +51,7 @@ const frontendDist = join(__dirname, '..', 'frontend-dist');
           type: 'postgres',
           url,
           autoLoadEntities: true,
-          synchronize: true,
+          synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
           extra: sslEnabled
             ? { ssl: { rejectUnauthorized: false } }
             : undefined,

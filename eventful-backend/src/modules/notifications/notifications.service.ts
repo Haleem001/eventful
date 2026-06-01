@@ -6,8 +6,10 @@ import { Resend } from 'resend';
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private readonly resend: Resend;
+  private readonly configService: ConfigService;
 
   constructor(configService: ConfigService) {
+    this.configService = configService;
     this.resend = new Resend(
       configService.getOrThrow<string>('RESEND_API_KEY'),
     );
@@ -29,7 +31,7 @@ export class NotificationsService {
     });
 
     const { error } = await this.resend.emails.send({
-      from: 'Eventful <eventful-reminders@mahmoudhaleem.dev>',
+      from: this.configService.get<string>('EMAIL_FROM') ?? 'Eventful <eventful-reminders@mahmoudhaleem.dev>',
       to,
       subject: `Reminder: ${eventTitle} is coming up!`,
       html: `

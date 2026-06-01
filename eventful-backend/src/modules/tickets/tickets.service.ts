@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
+import { Event } from '../events/entities/event.entity';
 import { TicketStatus } from './enums/ticket-status.enum';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
@@ -20,22 +21,32 @@ export class TicketsService {
     eventeeId: string,
     eventId: string,
   ): Promise<Ticket> {
+    const result = await this.ticketRepository.manager
+      .createQueryBuilder()
+      .update(Event)
+      .set({ ticketsSold: () => '"ticketsSold" + 1' })
+      .where('id = :eventId', { eventId })
+      .andWhere('"ticketsSold" < capacity')
+      .execute();
+
+    if (result.affected === 0) {
+      throw new BadRequestException('Event is sold out');
+    }
+
     const ticket = this.ticketRepository.create({
       reference,
       eventeeId,
       eventId,
       status: TicketStatus.PAID,
+      qrToken: this.signTicketId(reference),
     });
 
-    const saved = await this.ticketRepository.save(ticket);
+    ticket.qrCode = await QRCode.toDataURL(ticket.qrToken!, {
+      errorCorrectionLevel: 'M',
+      width: 256,
+    });
 
-    const qrToken = this.signTicketId(saved.id);
-    const qrPayload = JSON.stringify({ ticketId: saved.id, token: qrToken });
-    const qrCode = await QRCode.toDataURL(qrPayload);
-
-    saved.qrToken = qrToken;
-    saved.qrCode = qrCode;
-    return this.ticketRepository.save(saved);
+    return this.ticketRepository.save(ticket);
   }
 
   async verify(input: string): Promise<Ticket> {

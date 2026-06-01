@@ -1,13 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
+  const logger = new Logger('Bootstrap');
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],
+    credentials: true,
+  });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Eventful API Engine')
@@ -15,16 +26,15 @@ async function bootstrap() {
       'Backend documentation for the Eventful ticketing platform.',
     )
     .setVersion('1.0')
-    .addBearerAuth() // Allows you to pass JWT tokens safely in the Swagger UI later
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(` Eventful server is running on: http://localhost:3000`);
-  console.log(
-    `Swagger Documentation available at: http://localhost:3000/api/docs`,
-  );
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  logger.log(`Server running on http://localhost:${port}`);
+  logger.log(`Swagger at http://localhost:${port}/api/docs`);
 }
 bootstrap();

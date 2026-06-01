@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
 import { Role } from './enums/role.enum';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcrypt');
 

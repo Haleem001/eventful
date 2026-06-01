@@ -1,4 +1,6 @@
-import { Controller, Get, Param, Patch, UseGuards, Req, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, Patch, UseGuards, Req, ParseUUIDPipe, UseInterceptors, Inject } from '@nestjs/common';
+import { CacheTTL, CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import {
   ApiTags,
   ApiOperation,
@@ -12,14 +14,20 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../auth/enums/role.enum';
+import { UserCacheInterceptor } from '../../common/interceptors/user-cache.interceptor';
 
 @ApiTags('Tickets')
 @Controller('tickets')
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(
+    private readonly ticketsService: TicketsService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   @Get('user')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(UserCacheInterceptor)
+  @CacheTTL(60000)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user tickets' })
   @ApiOkResponse({ description: 'User tickets retrieved.' })
@@ -55,7 +63,9 @@ export class TicketsController {
   @ApiOkResponse({ description: 'Ticket verified successfully.' })
   @ApiBadRequestResponse({ description: 'Ticket already used or not paid.' })
   @ApiNotFoundResponse({ description: 'Ticket not found.' })
-  async verify(@Param('id') id: string) {
-    return this.ticketsService.verify(id);
+  async verify(@Param('id') id: string, @Req() req: any) {
+    const result = await this.ticketsService.verify(id);
+    await this.cacheManager.del(`${req.user.id}:/api/analytics/creator`);
+    return result;
   }
 }

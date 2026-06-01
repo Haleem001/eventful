@@ -7,7 +7,10 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import {
   ApiTags,
   ApiOperation,
@@ -29,6 +32,7 @@ export class PaymentController {
     private readonly paymentService: PaymentService,
     private readonly eventsService: EventsService,
     private readonly ticketsService: TicketsService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   @Post('initialize')
@@ -72,7 +76,9 @@ export class PaymentController {
     @Body('reference') reference: string,
     @Req() req: any,
   ) {
-    return this.paymentService.verifyPayment(reference, req.user.id);
+    const result = await this.paymentService.verifyPayment(reference, req.user.id);
+    await this.cacheManager.del(`${req.user.id}:/api/tickets/user`);
+    return result;
   }
 
   @Post('webhook')
@@ -113,6 +119,8 @@ export class PaymentController {
       metadata.eventeeId,
       metadata.eventId,
     );
+
+    await this.cacheManager.del(`${metadata.eventeeId}:/api/tickets/user`);
 
     return { status: 'success' };
   }

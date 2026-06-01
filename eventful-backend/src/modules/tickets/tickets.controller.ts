@@ -37,6 +37,16 @@ export class TicketsController {
     return this.ticketsService.findByEvent(eventId);
   }
 
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get ticket by ID' })
+  @ApiOkResponse({ description: 'Ticket retrieved.' })
+  @ApiNotFoundResponse({ description: 'Ticket not found.' })
+  async findOne(@Param('id') id: string) {
+    return this.ticketsService.findOne(id);
+  }
+
   @Patch(':id/verify')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.CREATOR)

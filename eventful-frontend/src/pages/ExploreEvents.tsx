@@ -1,0 +1,227 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import BottomNav from "../components/BottomNav";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
+import api from "../lib/api";
+import type { Event } from "../lib/types";
+import ShareButton from "../components/ShareButton";
+
+const categories = ["All Events", "Concerts", "Sports", "Theater", "Festivals"];
+
+export default function ExploreEvents() {
+  const [activeCategory, setActiveCategory] = useState(0);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    api.get<Event[]>("/events")
+      .then((res) => setEvents(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => toast(err?.response?.data?.message || "Failed to load events", "error"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+  };
+
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  };
+
+  const formatPrice = (price: string) => {
+    const n = Number(price);
+    return n >= 1000 ? `₦${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K` : `₦${n.toLocaleString()}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-on-background font-body-md antialiased">
+      <header className="bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
+        <div className="flex items-center gap-1 text-on-surface-variant hover:opacity-80 transition-opacity cursor-pointer">
+          <span className="material-symbols-outlined text-[20px]">location_on</span>
+          <span className="font-label-sm text-label-sm">Abuja, NG</span>
+        </div>
+        <h1 className="font-headline-md text-headline-md-mobile font-black text-primary absolute left-1/2 -translate-x-1/2">
+          Eventful
+        </h1>
+        <div className="relative">
+          <button
+            onClick={() => setShowUserMenu((o) => !o)}
+            className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/50 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-sm text-on-surface">person</span>
+          </button>
+          {showUserMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+              <div className="absolute right-0 top-10 z-50 bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl min-w-[180px] overflow-hidden">
+                {user && (
+                  <div className="px-4 py-3 border-b border-outline-variant/20">
+                    <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user.email}</p>
+                  </div>
+                )}
+                {user ? (
+                  <button
+                    onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">logout</span>
+                    Sign Out
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate("/auth"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-primary hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">login</span>
+                    Sign In
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </header>
+
+      <main className="pt-[72px] pb-[100px] max-w-[1200px] mx-auto">
+        <section className="py-stack-sm px-container-margin">
+          <div className="flex overflow-x-auto gap-3 hide-scrollbar pb-2">
+            {categories.map((cat, i) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(i)}
+                className={`px-4 py-2 rounded-full font-label-sm text-label-sm whitespace-nowrap active:scale-95 transition-transform ${
+                  i === activeCategory
+                    ? "bg-primary/20 border border-primary text-primary"
+                    : "bg-surface-container border border-outline-variant/30 text-on-surface-variant hover:bg-surface-container-highest"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : !Array.isArray(events) || events.length === 0 ? (
+          <div className="text-center py-20">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">event_busy</span>
+            <p className="font-body-md text-body-md text-on-surface-variant">No events yet. Check back soon!</p>
+          </div>
+        ) : (
+          <>
+            <section className="px-container-margin mb-stack-lg">
+              <div className="relative w-full h-[320px] rounded-xl overflow-hidden group cursor-pointer border border-outline-variant/20 shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-surface-container-highest via-surface-container to-surface-container-lowest">
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-50"></div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 w-full p-container-margin flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="px-2 py-0.5 rounded bg-primary/20 text-primary font-label-sm text-label-sm backdrop-blur-md">Featured</span>
+                        <span className="text-secondary font-label-sm text-label-sm">Top Pick</span>
+                      </div>
+                      <h2 className="font-headline-md text-headline-md-mobile text-on-background mb-1">{events[0].title}</h2>
+                      <div className="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+                        <span className="material-symbols-outlined text-[14px]">location_on</span>
+                        <span>{events[0].venue}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="font-headline-md text-headline-md-mobile text-primary">
+                      {formatPrice(events[0].price)}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <ShareButton
+                        url={`${window.location.origin}/event/${events[0].id}`}
+                        title={events[0].title}
+                      />
+                      <button
+                        onClick={() => navigate(`/event/${events[0].id}`)}
+                        className="bg-primary text-on-primary font-label-sm text-label-sm px-5 py-2.5 rounded-full hover:opacity-90 active:scale-95 transition-all"
+                        style={{ boxShadow: "0 0 15px rgba(78,222,163,0.3)" }}
+                      >
+                        Get Tickets
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="px-container-margin flex flex-col gap-stack-md">
+              <h3 className="font-headline-md text-[18px] text-on-background mb-2">Upcoming Events</h3>
+              {events.map((event) => {
+                const dateLabel = formatDate(event.date);
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => navigate(`/event/${event.id}`)}
+                    className="bg-surface-container rounded-xl border border-outline-variant/20 flex flex-row h-[140px] active:scale-[0.98] transition-transform cursor-pointer hover:border-primary/50"
+                  >
+                    <div className="w-[120px] h-full flex-shrink-0 relative bg-surface-container-highest flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="font-label-sm text-label-sm text-primary">
+                          {dateLabel.split(" ")[0]}
+                        </div>
+                        <div className="font-headline-md text-[20px] text-on-background leading-none mt-0.5">
+                          {dateLabel.split(" ")[1]}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 flex flex-col justify-between flex-grow min-w-0">
+                      <div>
+                        <h4 className="font-body-lg text-[16px] font-bold text-on-background line-clamp-1">
+                          {event.title}
+                        </h4>
+                        <div className="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-1">
+                          <span className="material-symbols-outlined text-[14px]">schedule</span>
+                          <span>{formatTime(event.date)}</span>
+                          <span className="mx-1">•</span>
+                          <span className="material-symbols-outlined text-[14px]">location_on</span>
+                          <span className="truncate">{event.venue}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-body-md font-semibold text-on-background">
+                          {formatPrice(event.price)}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <ShareButton
+                              url={`${window.location.origin}/event/${event.id}`}
+                              title={event.title}
+                            />
+                          </div>
+                          <button
+                            onClick={() => navigate(`/event/${event.id}`)}
+                            className="border border-outline-variant text-on-surface px-3 py-1.5 rounded-full font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+          </>
+        )}
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+}

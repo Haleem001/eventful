@@ -1,7 +1,7 @@
 # Eventful
 
-**🌐 Live:** [eventful.fly.dev](https://eventful.fly.dev)
-**📘 API Docs:** [eventful.fly.dev/api/docs](https://eventful.fly.dev/api/docs)
+**Live:** [eventful.fly.dev](https://eventful.fly.dev)
+**API Docs:** [eventful.fly.dev/api/docs](https://eventful.fly.dev/api/docs)
 
 A full-stack event management platform for discovering, creating, and managing events with ticketing capabilities. Built with React 19 + TypeScript + Vite on the frontend and NestJS on the backend.
 

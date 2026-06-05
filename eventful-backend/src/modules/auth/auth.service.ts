@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
@@ -112,16 +112,13 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    const users = await this.userRepository.find({
-      where: { resetTokenExpiry: undefined as any },
+    const candidates = await this.userRepository.find({
+      where: { resetTokenExpiry: MoreThan(new Date()) },
     });
-
-    const allUsers = await this.userRepository.find();
     let targetUser: User | null = null;
 
-    for (const u of allUsers) {
+    for (const u of candidates) {
       if (!u.resetToken) continue;
-      if (!u.resetTokenExpiry || u.resetTokenExpiry < new Date()) continue;
       const isValid = await bcrypt.compare(token, u.resetToken);
       if (isValid) {
         targetUser = u;

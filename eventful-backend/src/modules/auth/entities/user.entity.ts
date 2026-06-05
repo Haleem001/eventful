@@ -16,8 +16,23 @@ export class User {
   @Column({ type: 'varchar', unique: true })
   email!: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  name?: string;
+
   @Column({ type: 'varchar' })
   passwordHash!: string;
+
+  @Column({ type: 'boolean', default: false })
+  isVerified!: boolean;
+
+  @Column({ type: 'varchar', nullable: true })
+  verificationToken?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  resetToken?: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetTokenExpiry?: Date;
 
   @Column({
     type: 'enum',

@@ -12,6 +12,11 @@ import ScanTickets from "./pages/ScanTickets"
 import ManageEvents from "./pages/ManageEvents"
 import ManageTickets from "./pages/ManageTickets"
 import AuthPage from "./pages/AuthPage"
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
+import VerifyEmail from "./pages/VerifyEmail"
+import Profile from "./pages/Profile"
+import Reminders from "./pages/Reminders"
 
 function App() {
   return (
@@ -21,6 +26,9 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/explore" element={<ExploreEvents />} />
             <Route path="/event/:id" element={<EventDetails />} />
             <Route
@@ -68,6 +76,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["CREATOR"]}>
                   <ManageTickets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute allowedRoles={["CREATOR", "EVENTEE"]}>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reminders"
+              element={
+                <ProtectedRoute allowedRoles={["CREATOR", "EVENTEE"]}>
+                  <Reminders />
                 </ProtectedRoute>
               }
             />

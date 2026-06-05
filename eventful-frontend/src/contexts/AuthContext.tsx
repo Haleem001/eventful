@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string, role?: Role) => Promise<User>;
+  register: (email: string, password: string, role?: Role, name?: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 function userFromToken(token: string): User | null {
   const decoded = decodeToken(token);
   if (!decoded) return null;
-  return { id: decoded.id, email: decoded.email, role: decoded.role, createdAt: "" };
+  return { id: decoded.id, email: decoded.email, role: decoded.role as Role, name: decoded.name, createdAt: "" };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -44,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return u;
   };
 
-  const register = async (email: string, password: string, role?: Role) => {
-    const { data } = await api.post<User>("/auth/register", { email, password, role });
+  const register = async (email: string, password: string, role?: Role, name?: string) => {
+    const { data } = await api.post<User>("/auth/register", { email, password, role, name });
     return data;
   };
 

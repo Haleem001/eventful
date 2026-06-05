@@ -9,6 +9,7 @@ export default function AuthPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("EVENTEE");
@@ -26,8 +27,8 @@ export default function AuthPage() {
         navigate(u.role === "CREATOR" ? "/dashboard" : "/explore");
         return;
       }
-      await register(email, password, role);
-      toast("Account created! Please sign in.", "success");
+      await register(email, password, role, name || undefined);
+      toast("Account created! Check your email to verify.", "success");
       setIsLogin(true);
       setLoading(false);
       return;
@@ -76,10 +77,30 @@ export default function AuthPage() {
               minLength={8}
               required
             />
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="font-label-sm text-label-sm text-primary hover:underline mt-1.5 ml-1"
+              >
+                Forgot password?
+              </button>
+            )}
           </div>
 
           {!isLogin && (
-            <div>
+            <>
+              <div>
+                <label className="font-label-sm text-label-sm text-on-surface-variant mb-1.5 block ml-1">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant/50 text-on-surface font-body-md text-body-md rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  placeholder="Your full name"
+                />
+              </div>
+              <div>
               <label className="font-label-sm text-label-sm text-on-surface-variant mb-1.5 block ml-1">I am a</label>
               <div className="flex gap-2">
                 {(["EVENTEE", "CREATOR"] as Role[]).map((r) => (
@@ -98,6 +119,7 @@ export default function AuthPage() {
                 ))}
               </div>
             </div>
+            </>
           )}
 
           {error && (

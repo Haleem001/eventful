@@ -2,27 +2,35 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async register(
     registerDto: RegisterDto,
   ): Promise<Omit<User, 'passwordHash'>> {
-    const { email, password, role } = registerDto;
+    const { email, password, role, name } = registerDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -36,16 +44,102 @@ export class AuthService {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = await bcrypt.hash(verificationToken, saltRounds);
+
     const newUser = this.userRepository.create({
       email,
       passwordHash,
       role,
+      name,
+      verificationToken: verificationTokenHash,
     });
 
     const savedUser = await this.userRepository.save(newUser);
 
-    const { passwordHash: _, ...userWithoutPassword } = savedUser;
+    try {
+      await this.notificationsService.sendVerificationEmail(email, verificationToken);
+    } catch (err) {
+      this.logger.warn(`Verification email not sent to ${email}: ${err}`);
+    }
+
+    const { passwordHash: _, verificationToken: __, ...userWithoutPassword } = savedUser;
     return userWithoutPassword;
+  }
+
+  async verifyEmail(token: string, email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Invalid verification request.');
+    }
+    if (user.isVerified) {
+      return { message: 'Email already verified.' };
+    }
+    if (!user.verificationToken) {
+      throw new BadRequestException('No verification pending.');
+    }
+    const isValid = await bcrypt.compare(token, user.verificationToken);
+    if (!isValid) {
+      throw new BadRequestException('Invalid or expired verification token.');
+    }
+    user.isVerified = true;
+    user.verificationToken = undefined as any;
+    await this.userRepository.save(user);
+    return { message: 'Email verified successfully.' };
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      return { message: 'If that email exists, a reset link has been sent.' };
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = await bcrypt.hash(resetToken, 10);
+    const resetTokenExpiry = new Date(Date.now() + 3600000);
+
+    user.resetToken = resetTokenHash;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await this.userRepository.save(user);
+
+    try {
+      await this.notificationsService.sendPasswordResetEmail(email, resetToken);
+    } catch (err) {
+      this.logger.warn(`Password reset email not sent to ${email}: ${err}`);
+    }
+
+    return { message: 'If that email exists, a reset link has been sent.' };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const users = await this.userRepository.find({
+      where: { resetTokenExpiry: undefined as any },
+    });
+
+    const allUsers = await this.userRepository.find();
+    let targetUser: User | null = null;
+
+    for (const u of allUsers) {
+      if (!u.resetToken) continue;
+      if (!u.resetTokenExpiry || u.resetTokenExpiry < new Date()) continue;
+      const isValid = await bcrypt.compare(token, u.resetToken);
+      if (isValid) {
+        targetUser = u;
+        break;
+      }
+    }
+
+    if (!targetUser) {
+      throw new BadRequestException('Invalid or expired reset token.');
+    }
+
+    const saltRounds = 10;
+    targetUser.passwordHash = await bcrypt.hash(newPassword, saltRounds);
+    targetUser.resetToken = undefined as any;
+    targetUser.resetTokenExpiry = undefined as any;
+    await this.userRepository.save(targetUser);
+
+    return { message: 'Password reset successfully.' };
   }
 
   async login(
@@ -63,10 +157,55 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Please verify your email before logging in.');
+    }
+
+    const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
     const accessToken = this.jwtService.sign(payload);
 
     const { passwordHash: _, ...userWithoutPassword } = user;
     return { accessToken, user: userWithoutPassword };
+  }
+
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      return { message: 'If that email exists, a verification link has been sent.' };
+    }
+    if (user.isVerified) {
+      return { message: 'Email already verified.' };
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = await bcrypt.hash(verificationToken, 10);
+    user.verificationToken = verificationTokenHash;
+    await this.userRepository.save(user);
+
+    try {
+      await this.notificationsService.sendVerificationEmail(email, verificationToken);
+    } catch (err) {
+      this.logger.warn(`Verification email not sent to ${email}: ${err}`);
+    }
+
+    return { message: 'If that email exists, a verification link has been sent.' };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect.');
+    }
+
+    const saltRounds = 10;
+    user.passwordHash = await bcrypt.hash(dto.newPassword, saltRounds);
+    await this.userRepository.save(user);
+
+    return { message: 'Password changed successfully.' };
   }
 }

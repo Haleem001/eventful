@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Query, UseGuards, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiCreatedResponse,
@@ -7,11 +7,19 @@ import {
   ApiTags,
   ApiOperation,
   ApiUnauthorizedResponse,
+  ApiBearerAuth,
+  ApiBadRequestResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { User } from './entities/user.entity';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -64,5 +72,59 @@ export class AuthController {
     @Body() loginDto: LoginDto,
   ): Promise<{ accessToken: string; user: Omit<User, 'passwordHash'> }> {
     return this.authService.login(loginDto);
+  }
+
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email address with token' })
+  @ApiOkResponse({ description: 'Email verified successfully.' })
+  @ApiBadRequestResponse({ description: 'Invalid or expired token.' })
+  @ApiQuery({ name: 'token', required: true })
+  @ApiQuery({ name: 'email', required: true })
+  async verifyEmail(
+    @Query('token') token: string,
+    @Query('email') email: string,
+  ) {
+    return this.authService.verifyEmail(token, email);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @ApiOperation({ summary: 'Resend email verification link' })
+  @ApiOkResponse({ description: 'Verification link sent if email exists.' })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerification(dto.email);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @ApiOperation({ summary: 'Request a password reset link' })
+  @ApiOkResponse({ description: 'Reset link sent if email exists.' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password using a reset token' })
+  @ApiOkResponse({ description: 'Password reset successfully.' })
+  @ApiBadRequestResponse({ description: 'Invalid or expired token.' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change the authenticated user password' })
+  @ApiOkResponse({ description: 'Password changed successfully.' })
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @Req() req: any,
+  ) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 }

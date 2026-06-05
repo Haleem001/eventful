@@ -25,4 +25,10 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(Role)
   role?: Role;
+
+  @ApiProperty({ example: 'Aminu Bakori', required: false })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty({ message: 'Name cannot be empty.' })
+  name?: string;
 }

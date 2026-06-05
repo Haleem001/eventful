@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER, Reflector } from '@nestjs/core';
 import type { ThrottlerModuleOptions, ThrottlerStorage } from '@nestjs/throttler';
 import {
   ThrottlerModule,
@@ -18,12 +18,14 @@ import { existsSync } from 'fs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AuthModule } from './modules/auth/auth.module';
 import { EventsModule } from './modules/events/events.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentModule } from './modules/payments/payment.module';
+import { UsersModule } from './modules/users/users.module';
 
 const frontendDist = join(__dirname, '..', 'frontend-dist');
 
@@ -75,6 +77,7 @@ const frontendDist = join(__dirname, '..', 'frontend-dist');
     EventsModule,
     TicketsModule,
     AnalyticsModule,
+    UsersModule,
     NotificationsModule,
     PaymentModule,
   ],
@@ -97,6 +100,10 @@ const frontendDist = join(__dirname, '..', 'frontend-dist');
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })

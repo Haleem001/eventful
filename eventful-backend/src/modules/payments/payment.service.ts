@@ -138,6 +138,13 @@ export class PaymentService {
       );
     }
 
+    if (metaEventeeId !== eventeeId) {
+      throw new HttpException(
+        'This payment does not belong to you.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     const reminderKey = verification.metadata.reminder as string | undefined;
 
     let ticket: any;

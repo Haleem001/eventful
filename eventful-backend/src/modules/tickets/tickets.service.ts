@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
@@ -49,7 +49,7 @@ export class TicketsService {
     return this.ticketRepository.save(ticket);
   }
 
-  async verify(input: string): Promise<Ticket> {
+  async verify(input: string, creatorId?: string): Promise<Ticket> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
 
     let ticket = await this.ticketRepository.findOne({
@@ -66,6 +66,10 @@ export class TicketsService {
 
     if (!ticket) {
       throw new NotFoundException(`Ticket with ID or reference "${input}" not found.`);
+    }
+
+    if (creatorId && ticket.event.creatorId !== creatorId) {
+      throw new ForbiddenException('You can only verify tickets for your own events.');
     }
 
     if (ticket.status !== TicketStatus.PAID) {
@@ -100,12 +104,49 @@ export class TicketsService {
     });
   }
 
-  async findByEvent(eventId: string): Promise<Ticket[]> {
+  async findByEvent(eventId: string, creatorId: string): Promise<Ticket[]> {
+    const event = await this.ticketRepository.manager.findOne(Event, {
+      where: { id: eventId },
+      select: { creatorId: true },
+    });
+    if (!event || event.creatorId !== creatorId) {
+      throw new NotFoundException(`Event with ID ${eventId} not found.`);
+    }
     return this.ticketRepository.find({
       where: { eventId },
       relations: { eventee: true },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async cancel(id: string, userId: string): Promise<Ticket> {
+    const ticket = await this.ticketRepository.findOne({ where: { id } });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with ID ${id} not found.`);
+    }
+
+    if (ticket.eventeeId !== userId) {
+      throw new ForbiddenException('You can only cancel your own tickets.');
+    }
+
+    if (ticket.status !== TicketStatus.PAID) {
+      throw new BadRequestException('Only paid tickets can be cancelled.');
+    }
+
+    if (ticket.isScanned) {
+      throw new BadRequestException('Cannot cancel an already scanned ticket.');
+    }
+
+    ticket.status = TicketStatus.CANCELLED;
+
+    await this.ticketRepository.manager
+      .createQueryBuilder()
+      .update(Event)
+      .set({ ticketsSold: () => '"ticketsSold" - 1' })
+      .where('id = :eventId', { eventId: ticket.eventId })
+      .execute();
+
+    return this.ticketRepository.save(ticket);
   }
 
   private signTicketId(ticketId: string): string {

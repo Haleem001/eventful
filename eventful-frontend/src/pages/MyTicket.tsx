@@ -108,6 +108,20 @@ export default function MyTicket() {
                     <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
                   </div>
                   <button
+                    onClick={() => { setShowUserMenu(false); navigate("/profile"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate("/reminders"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">notifications</span>
+                    Reminders
+                  </button>
+                  <button
                     onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
                     className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
                   >

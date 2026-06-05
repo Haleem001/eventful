@@ -25,11 +25,25 @@ describe('TicketsService', () => {
     eventeeId: 'eventee-uuid',
     eventee: null as any,
     eventId: 'event-uuid',
-    event: null as any,
+    event: { id: 'event-uuid', creatorId: 'creator-uuid', title: 'Test Event', description: '', venue: '', date: new Date(), price: 0, capacity: 0, ticketsSold: 0, category: '', creator: null as any, tickets: [], createdAt: new Date() } as any,
     createdAt: new Date('2026-01-01'),
   };
 
+  const mockExecute = jest.fn().mockResolvedValue({ affected: 1 });
+  const mockAndWhere = jest.fn().mockReturnThis();
+  const mockWhere = jest.fn().mockReturnThis();
+  const mockSet = jest.fn().mockReturnThis();
+  const mockUpdate = jest.fn().mockReturnThis();
+  const mockCreateQueryBuilder = jest.fn(() => ({
+    update: mockUpdate,
+    set: mockSet,
+    where: mockWhere,
+    andWhere: mockAndWhere,
+    execute: mockExecute,
+  }));
+
   const mockTicketRepository = {
+    manager: { createQueryBuilder: mockCreateQueryBuilder },
     create: jest.fn(),
     save: jest.fn(),
     findOne: jest.fn(),
@@ -65,14 +79,25 @@ describe('TicketsService', () => {
 
   describe('create', () => {
     it('should create a ticket with QR code and token', async () => {
-      mockTicketRepository.create.mockReturnValue(mockTicket);
-      mockTicketRepository.save
-        .mockResolvedValueOnce(mockTicket)
-        .mockResolvedValueOnce({
-          ...mockTicket,
-          qrToken: 'hmac-token',
-          qrCode: 'data:image/png;base64,mock_qr_code',
-        });
+      (QRCode.toDataURL as jest.Mock).mockResolvedValue(
+        'data:image/png;base64,mock_qr_code',
+      );
+      const createInput = {
+        reference: 'evt_abc12345',
+        eventeeId: 'eventee-uuid',
+        eventId: 'event-uuid',
+        status: TicketStatus.PAID,
+        qrToken: expect.any(String),
+      };
+      mockTicketRepository.create.mockReturnValue({
+        ...mockTicket,
+        qrToken: 'hmac-token',
+      });
+      mockTicketRepository.save.mockResolvedValue({
+        ...mockTicket,
+        qrToken: 'hmac-token',
+        qrCode: 'data:image/png;base64,mock_qr_code',
+      });
 
       const result = await service.create(
         'evt_abc12345',
@@ -80,12 +105,7 @@ describe('TicketsService', () => {
         'event-uuid',
       );
 
-      expect(mockTicketRepository.create).toHaveBeenCalledWith({
-        reference: 'evt_abc12345',
-        eventeeId: 'eventee-uuid',
-        eventId: 'event-uuid',
-        status: TicketStatus.PAID,
-      });
+      expect(mockTicketRepository.create).toHaveBeenCalledWith(createInput);
       expect(result.qrCode).toBe('data:image/png;base64,mock_qr_code');
       expect(result.qrToken).toBeTruthy();
     });
@@ -115,6 +135,14 @@ describe('TicketsService', () => {
 
       await expect(service.verify('ticket-uuid')).rejects.toThrow(
         BadRequestException,
+      );
+    });
+
+    it('should throw ForbiddenException if ticket belongs to another creator', async () => {
+      mockTicketRepository.findOne.mockResolvedValue(mockTicket);
+
+      await expect(service.verify('ticket-uuid', 'other-creator')).rejects.toThrow(
+        'You can only verify tickets for your own events.',
       );
     });
 

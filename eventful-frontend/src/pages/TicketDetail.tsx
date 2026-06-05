@@ -17,6 +17,7 @@ export default function TicketDetail() {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!ticketId) return;
@@ -144,23 +145,44 @@ export default function TicketDetail() {
         </div>
 
         {ticket.status === "PAID" && !ticket.isScanned && (
-          <div className="z-10 mt-6 bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden shadow-sm p-5">
-            <p className="font-label-sm text-label-sm text-on-surface-variant mb-4 text-center uppercase tracking-wider">QR Code</p>
-            <div className="flex justify-center">
-              <div className="relative bg-white p-4 rounded-xl shadow-[0_0_20px_rgba(78,222,163,0.1)] border-2 border-primary/20">
-                <div className="w-48 h-48 bg-white flex items-center justify-center">
-                  {ticket.qrCode ? (
-                    <img src={ticket.qrCode} alt="QR Code" className="w-full h-full object-contain" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                      <span className="material-symbols-outlined text-5xl">qr_code</span>
-                      <span className="font-label-sm text-[10px]">{ticket.qrToken || ticket.reference.slice(0, 10)}</span>
-                    </div>
-                  )}
+          <>
+            <div className="z-10 mt-6 bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden shadow-sm p-5">
+              <p className="font-label-sm text-label-sm text-on-surface-variant mb-4 text-center uppercase tracking-wider">QR Code</p>
+              <div className="flex justify-center">
+                <div className="relative bg-white p-4 rounded-xl shadow-[0_0_20px_rgba(78,222,163,0.1)] border-2 border-primary/20">
+                  <div className="w-48 h-48 bg-white flex items-center justify-center">
+                    {ticket.qrCode ? (
+                      <img src={ticket.qrCode} alt="QR Code" className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-gray-400">
+                        <span className="material-symbols-outlined text-5xl">qr_code</span>
+                        <span className="font-label-sm text-[10px]">{ticket.qrToken || ticket.reference.slice(0, 10)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            <button
+              onClick={async () => {
+                if (!window.confirm("Cancel this ticket? This action cannot be undone.")) return;
+                setCancelling(true);
+                try {
+                  await api.patch(`/tickets/${ticketId}/cancel`);
+                  toast("Ticket cancelled", "success");
+                  const res = await api.get<Ticket>(`/tickets/${ticketId}`);
+                  setTicket(res.data);
+                } catch (err: any) {
+                  toast(err?.response?.data?.message || "Failed to cancel ticket", "error");
+                }
+                setCancelling(false);
+              }}
+              disabled={cancelling}
+              className="z-10 mt-4 w-full border border-error/50 text-error px-4 py-3 rounded-xl font-label-sm text-label-sm hover:bg-error/10 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {cancelling ? <span className="w-4 h-4 border-2 border-error border-t-transparent rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[18px]">cancel</span> Cancel Ticket</>}
+            </button>
+          </>
         )}
       </main>
 

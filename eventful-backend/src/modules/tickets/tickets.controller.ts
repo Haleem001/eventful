@@ -41,8 +41,8 @@ export class TicketsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get tickets for a specific event (Creator only)' })
   @ApiOkResponse({ description: 'Event tickets retrieved.' })
-  async findByEvent(@Param('eventId', ParseUUIDPipe) eventId: string) {
-    return this.ticketsService.findByEvent(eventId);
+  async findByEvent(@Param('eventId', ParseUUIDPipe) eventId: string, @Req() req: any) {
+    return this.ticketsService.findByEvent(eventId, req.user.id);
   }
 
   @Get(':id')
@@ -63,9 +63,20 @@ export class TicketsController {
   @ApiOkResponse({ description: 'Ticket verified successfully.' })
   @ApiBadRequestResponse({ description: 'Ticket already used or not paid.' })
   @ApiNotFoundResponse({ description: 'Ticket not found.' })
-  async verify(@Param('id') id: string, @Req() req: any) {
-    const result = await this.ticketsService.verify(id);
+  async verify(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    const result = await this.ticketsService.verify(id, req.user.id);
     await this.cacheManager.del(`${req.user.id}:/api/analytics/creator`);
     return result;
+  }
+
+  @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cancel a ticket (Eventee only)' })
+  @ApiOkResponse({ description: 'Ticket cancelled.' })
+  @ApiBadRequestResponse({ description: 'Ticket cannot be cancelled.' })
+  @ApiNotFoundResponse({ description: 'Ticket not found.' })
+  async cancel(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.ticketsService.cancel(id, req.user.id);
   }
 }

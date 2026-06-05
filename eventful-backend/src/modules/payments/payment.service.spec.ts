@@ -4,6 +4,9 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException } from '@nestjs/common';
 import { of, throwError } from 'rxjs';
 import { PaymentService } from './payment.service';
+import { TicketsService } from '../tickets/tickets.service';
+import { RemindersService } from '../notifications/reminders.service';
+import { EventsService } from '../events/events.service';
 import * as crypto from 'crypto';
 
 describe('PaymentService', () => {
@@ -19,6 +22,10 @@ describe('PaymentService', () => {
     get: jest.fn(),
   };
 
+  const mockTicketsService = {};
+  const mockRemindersService = {};
+  const mockEventsService = {};
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -27,6 +34,9 @@ describe('PaymentService', () => {
         PaymentService,
         { provide: ConfigService, useValue: mockConfigService },
         { provide: HttpService, useValue: mockHttpService },
+        { provide: TicketsService, useValue: mockTicketsService },
+        { provide: RemindersService, useValue: mockRemindersService },
+        { provide: EventsService, useValue: mockEventsService },
       ],
     }).compile();
 
@@ -52,6 +62,8 @@ describe('PaymentService', () => {
         'user@example.com',
         5000,
         'evt_ref123',
+        'event-id',
+        'user-id',
       );
 
       expect(result.authorizationUrl).toBe(
@@ -68,7 +80,7 @@ describe('PaymentService', () => {
       );
 
       await expect(
-        service.initializePayment('user@example.com', -1, 'evt_ref123'),
+        service.initializePayment('user@example.com', -1, 'evt_ref123', 'event-id', 'user-id'),
       ).rejects.toThrow(HttpException);
     });
   });

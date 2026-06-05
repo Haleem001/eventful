@@ -28,10 +28,10 @@ import { Reminder } from './modules/notifications/entities/reminder.entity';
 import { Role } from './modules/auth/enums/role.enum';
 
 const CREATORS = [
-  { email: 'aminu@techbauchi.ng', password: 'password123' },
-  { email: 'zainab@kanohub.ng', password: 'password123' },
-  { email: 'musa@arewadev.ng', password: 'password123' },
-  { email: 'aisha@husa.ng', password: 'password123' },
+  { email: 'aminu@techbauchi.ng', password: 'password123', name: 'Aminu Bakori' },
+  { email: 'zainab@kanohub.ng', password: 'password123', name: 'Zainab Ado Kurawa' },
+  { email: 'musa@arewadev.ng', password: 'password123', name: 'Musa Aliyu' },
+  { email: 'aisha@husa.ng', password: 'password123', name: 'Aisha Suleiman' },
 ];
 
 const EVENTS = [
@@ -42,6 +42,7 @@ const EVENTS = [
     date: '2026-09-12T09:00:00.000Z',
     price: 8000,
     capacity: 300,
+    category: 'CONFERENCE',
     creatorEmail: 'aminu@techbauchi.ng',
   },
   {
@@ -51,6 +52,7 @@ const EVENTS = [
     date: '2026-10-03T10:00:00.000Z',
     price: 10000,
     capacity: 400,
+    category: 'FESTIVAL',
     creatorEmail: 'zainab@kanohub.ng',
   },
   {
@@ -60,6 +62,7 @@ const EVENTS = [
     date: '2026-08-22T09:00:00.000Z',
     price: 12000,
     capacity: 250,
+    category: 'CONFERENCE',
     creatorEmail: 'musa@arewadev.ng',
   },
   {
@@ -69,6 +72,7 @@ const EVENTS = [
     date: '2026-07-18T14:00:00.000Z',
     price: 3000,
     capacity: 80,
+    category: 'WORKSHOP',
     creatorEmail: 'aisha@husa.ng',
   },
   {
@@ -78,6 +82,7 @@ const EVENTS = [
     date: '2026-11-07T09:00:00.000Z',
     price: 35000,
     capacity: 300,
+    category: 'CONFERENCE',
     creatorEmail: 'musa@arewadev.ng',
   },
   {
@@ -87,6 +92,7 @@ const EVENTS = [
     date: '2026-08-15T08:00:00.000Z',
     price: 5000,
     capacity: 150,
+    category: 'WORKSHOP',
     creatorEmail: 'zainab@kanohub.ng',
   },
   {
@@ -96,6 +102,7 @@ const EVENTS = [
     date: '2026-09-28T10:00:00.000Z',
     price: 5000,
     capacity: 120,
+    category: 'WORKSHOP',
     creatorEmail: 'aminu@techbauchi.ng',
   },
   {
@@ -105,6 +112,7 @@ const EVENTS = [
     date: '2026-10-15T09:00:00.000Z',
     price: 7000,
     capacity: 200,
+    category: 'WORKSHOP',
     creatorEmail: 'zainab@kanohub.ng',
   },
   {
@@ -114,6 +122,7 @@ const EVENTS = [
     date: '2026-07-26T09:00:00.000Z',
     price: 15000,
     capacity: 200,
+    category: 'CONFERENCE',
     creatorEmail: 'musa@arewadev.ng',
   },
   {
@@ -123,6 +132,7 @@ const EVENTS = [
     date: '2026-09-05T09:00:00.000Z',
     price: 4000,
     capacity: 150,
+    category: 'WORKSHOP',
     creatorEmail: 'aisha@husa.ng',
   },
   {
@@ -132,6 +142,7 @@ const EVENTS = [
     date: '2026-10-25T09:00:00.000Z',
     price: 8000,
     capacity: 250,
+    category: 'CONFERENCE',
     creatorEmail: 'aminu@techbauchi.ng',
   },
   {
@@ -141,6 +152,7 @@ const EVENTS = [
     date: '2026-08-08T10:00:00.000Z',
     price: 2000,
     capacity: 100,
+    category: 'WORKSHOP',
     creatorEmail: 'zainab@kanohub.ng',
   },
   {
@@ -150,6 +162,7 @@ const EVENTS = [
     date: '2026-11-15T09:00:00.000Z',
     price: 12000,
     capacity: 180,
+    category: 'CONFERENCE',
     creatorEmail: 'musa@arewadev.ng',
   },
   {
@@ -159,6 +172,7 @@ const EVENTS = [
     date: '2026-07-07T09:00:00.000Z',
     price: 3000,
     capacity: 500,
+    category: 'FESTIVAL',
     creatorEmail: 'aminu@techbauchi.ng',
   },
   {
@@ -168,6 +182,7 @@ const EVENTS = [
     date: '2026-10-08T10:00:00.000Z',
     price: 6000,
     capacity: 200,
+    category: 'FESTIVAL',
     creatorEmail: 'aisha@husa.ng',
   },
   {
@@ -177,6 +192,7 @@ const EVENTS = [
     date: '2026-11-28T10:00:00.000Z',
     price: 5000,
     capacity: 150,
+    category: 'WORKSHOP',
     creatorEmail: 'aisha@husa.ng',
   },
 ];
@@ -204,7 +220,7 @@ async function bootstrap() {
       continue;
     }
     const hash = await bcrypt.hash(c.password, 10);
-    user = userRepo.create({ email: c.email, passwordHash: hash, role: Role.CREATOR });
+    user = userRepo.create({ email: c.email, passwordHash: hash, role: Role.CREATOR, name: c.name });
     user = await userRepo.save(user);
     createdUsers.set(c.email, user);
     console.log(`Created user: ${c.email} (CREATOR)`);
@@ -232,6 +248,7 @@ async function bootstrap() {
       date: new Date(e.date),
       price: e.price,
       capacity: e.capacity,
+      category: e.category,
       creatorId: creator.id,
     });
     await eventRepo.save(event);

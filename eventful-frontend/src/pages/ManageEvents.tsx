@@ -8,18 +8,29 @@ import type { Event, CreateEventPayload } from "../lib/types";
 
 type FormMode = "create" | "edit";
 
+const CATEGORIES = [
+  { label: "Other", value: "OTHER" },
+  { label: "Concert", value: "CONCERT" },
+  { label: "Sports", value: "SPORTS" },
+  { label: "Theater", value: "THEATER" },
+  { label: "Festival", value: "FESTIVAL" },
+  { label: "Workshop", value: "WORKSHOP" },
+  { label: "Conference", value: "CONFERENCE" },
+];
+
 export default function ManageEvents() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>("create");
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CreateEventPayload>({
-    title: "", description: "", venue: "", date: "", price: 0, capacity: 0,
+    title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER",
   });
 
   const fetchEvents = () => {
@@ -35,7 +46,7 @@ export default function ManageEvents() {
   }, [user]);
 
   const openCreate = () => {
-    setForm({ title: "", description: "", venue: "", date: "", price: 0, capacity: 0 });
+    setForm({ title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER" });
     setFormMode("create");
     setEditingId(null);
     setShowForm(true);
@@ -49,6 +60,7 @@ export default function ManageEvents() {
       date: ev.date.slice(0, 16),
       price: Number(ev.price),
       capacity: ev.capacity,
+      category: ev.category,
     });
     setFormMode("edit");
     setEditingId(ev.id);
@@ -88,9 +100,43 @@ export default function ManageEvents() {
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Events</h1>
-        <button onClick={openCreate} className="bg-primary-container text-on-primary-container p-2 rounded-full hover:opacity-90 active:scale-95 transition-all">
-          <span className="material-symbols-outlined">add</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={openCreate} className="bg-primary-container text-on-primary-container p-2 rounded-full hover:opacity-90 active:scale-95 transition-all">
+            <span className="material-symbols-outlined">add</span>
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu((o) => !o)}
+              className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 bg-surface-container flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <span className="material-symbols-outlined text-sm text-on-surface">person</span>
+            </button>
+            {showUserMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+                <div className="absolute right-0 top-10 z-50 bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl min-w-[180px] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-outline-variant/20">
+                    <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate("/profile"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">logout</span>
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="pt-[72px] px-container-margin pb-32 max-w-[1200px] mx-auto">
@@ -172,6 +218,18 @@ export default function ManageEvents() {
                   <label className="font-label-sm text-label-sm text-on-surface-variant mb-1 block ml-1">Capacity</label>
                   <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} required min={1} className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md text-body-md" />
                 </div>
+              </div>
+              <div>
+                <label className="font-label-sm text-label-sm text-on-surface-variant mb-1 block ml-1">Category</label>
+                <select
+                  value={form.category || "OTHER"}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md text-body-md appearance-none"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-3 mt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-outline-variant text-on-surface-variant px-4 py-3 rounded-xl font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Cancel</button>

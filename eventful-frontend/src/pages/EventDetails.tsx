@@ -106,11 +106,10 @@ export default function EventDetails() {
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <p className="font-body-md text-body-md text-on-surface-variant">Hosted by</p>
-                <p className="font-body-lg text-body-lg text-on-surface font-semibold truncate">Event Creator</p>
+                <p className="font-body-lg text-body-lg text-on-surface font-semibold truncate">
+                  {event.creator?.name || event.creator?.email || "Event Creator"}
+                </p>
               </div>
-              <button className="shrink-0 px-4 py-1.5 rounded-full border border-primary text-primary font-label-sm text-label-sm hover:bg-primary/10 transition-colors">
-                Follow
-              </button>
             </div>
 
             <div className="grid gap-stack-md mb-stack-lg">
@@ -160,13 +159,13 @@ export default function EventDetails() {
               </div>
             </div>
 
-            <div className="w-full h-32 bg-surface-container rounded-xl overflow-hidden relative mb-stack-lg border border-outline-variant/30">
-              <div className="absolute inset-0 bg-gradient-to-br from-surface-container-highest to-surface-container"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <span className="material-symbols-outlined">map</span>
-                  <span className="font-body-md text-sm">{event.venue}</span>
-                </div>
+            <div className="flex items-start gap-4 mb-stack-lg">
+              <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 border border-outline-variant/30">
+                <span className="material-symbols-outlined text-primary">location_on</span>
+              </div>
+              <div className="min-w-0">
+                <p className="font-body-lg text-body-lg text-on-surface font-semibold">{event.venue}</p>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Capacity: {event.capacity}</p>
               </div>
             </div>
           </div>

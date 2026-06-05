@@ -36,6 +36,9 @@ export class Event {
   @Column({ type: 'int', default: 0 })
   ticketsSold!: number;
 
+  @Column({ type: 'varchar', length: 50, default: 'OTHER' })
+  category!: string;
+
   @ManyToOne(() => User, (user) => user.events, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'creatorId' })
   creator!: User;

@@ -49,4 +49,10 @@ export class UpdateEventDto {
   @IsNumber()
   @Min(1)
   capacity?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @IsIn(['CONCERT', 'SPORTS', 'THEATER', 'FESTIVAL', 'WORKSHOP', 'CONFERENCE', 'OTHER'])
+  category?: string;
 }

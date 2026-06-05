@@ -3,6 +3,7 @@ export type Role = "CREATOR" | "EVENTEE";
 export interface User {
   id: string;
   email: string;
+  name?: string;
   role: Role;
   createdAt: string;
 }
@@ -21,8 +22,18 @@ export interface Event {
   price: string;
   capacity: number;
   ticketsSold: number;
+  category: string;
   creatorId: string;
+  creator?: { id: string; name?: string; email: string };
   createdAt: string;
+}
+
+export interface PaginatedEventsResponse {
+  data: Event[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface Ticket {
@@ -66,6 +77,7 @@ export interface CreateEventPayload {
   date: string;
   price: number;
   capacity: number;
+  category?: string;
 }
 
 export interface TicketWithAttendee extends Ticket {
@@ -79,5 +91,14 @@ export interface VerifyTicketResponse {
   isScanned: boolean;
   eventeeId: string;
   eventId: string;
+  event?: Event;
+}
+
+export interface Reminder {
+  id: string;
+  eventId: string;
+  eventeeId: string;
+  remindAt: string;
+  sent: boolean;
   event?: Event;
 }

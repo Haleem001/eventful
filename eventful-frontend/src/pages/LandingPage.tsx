@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../lib/api";
-import type { Event } from "../lib/types";
+import type { Event, PaginatedEventsResponse } from "../lib/types";
 import ShareButton from "../components/ShareButton";
 
 export default function LandingPage() {
@@ -13,10 +13,10 @@ export default function LandingPage() {
 
   useEffect(() => {
     api
-      .get<Event[]>("/events")
+      .get<PaginatedEventsResponse>("/events?limit=6")
       .then((res) => {
-        const data = Array.isArray(res.data) ? res.data : [];
-        setEvents(data.slice(0, 6));
+        const data = Array.isArray(res.data?.data) ? res.data.data : [];
+        setEvents(data);
       })
       .catch(() => {});
   }, []);

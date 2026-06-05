@@ -84,4 +84,14 @@ export class CreateEventDto {
   @IsIn(REMINDER_OPTIONS, { each: true })
   @ArrayMaxSize(5)
   reminderConfig?: string[];
+
+  @ApiProperty({
+    example: 'CONFERENCE',
+    description: 'Event category.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['CONCERT', 'SPORTS', 'THEATER', 'FESTIVAL', 'WORKSHOP', 'CONFERENCE', 'OTHER'], { message: 'Category must be one of: CONCERT, SPORTS, THEATER, FESTIVAL, WORKSHOP, CONFERENCE, OTHER' })
+  category?: string;
 }

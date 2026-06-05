@@ -21,6 +21,7 @@ describe('EventsService', () => {
     price: 99.99,
     capacity: 200,
     ticketsSold: 0,
+    category: 'CONFERENCE',
     creatorId: 'creator-uuid',
     creator: null as any,
     tickets: [],
@@ -40,6 +41,7 @@ describe('EventsService', () => {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
+    findAndCount: jest.fn(),
     findOne: jest.fn(),
   };
 
@@ -73,6 +75,7 @@ describe('EventsService', () => {
       expect(mockEventRepository.create).toHaveBeenCalledWith({
         ...mockCreateDto,
         creatorId: 'creator-uuid',
+        category: 'OTHER',
       });
       expect(mockRemindersService.createFromConfig).not.toHaveBeenCalled();
       expect(result.title).toBe('TechConf 2026');
@@ -99,23 +102,46 @@ describe('EventsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return events ordered by date ascending', async () => {
-      mockEventRepository.find.mockResolvedValue([mockEvent]);
+    it('should return paginated events ordered by date ascending', async () => {
+      mockEventRepository.findAndCount.mockResolvedValue([[mockEvent], 1]);
 
-      const result = await service.findAll();
+      const result = await service.findAll({ page: 1, limit: 10 });
 
-      expect(result).toHaveLength(1);
-      expect(mockEventRepository.find).toHaveBeenCalledWith({
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].title).toBe('TechConf 2026');
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(result.totalPages).toBe(1);
+      expect(mockEventRepository.findAndCount).toHaveBeenCalledWith({
+        where: {},
         order: { date: 'ASC' },
+        skip: 0,
+        take: 10,
       });
     });
 
-    it('should return empty array when no events exist', async () => {
-      mockEventRepository.find.mockResolvedValue([]);
+    it('should filter by category', async () => {
+      mockEventRepository.findAndCount.mockResolvedValue([[mockEvent], 1]);
+
+      await service.findAll({ category: 'CONFERENCE' });
+
+      expect(mockEventRepository.findAndCount).toHaveBeenCalledWith({
+        where: { category: 'CONFERENCE' },
+        order: { date: 'ASC' },
+        skip: 0,
+        take: 10,
+      });
+    });
+
+    it('should return empty result when no events exist', async () => {
+      mockEventRepository.findAndCount.mockResolvedValue([[], 0]);
 
       const result = await service.findAll();
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.totalPages).toBe(0);
     });
   });
 
@@ -128,6 +154,7 @@ describe('EventsService', () => {
       expect(result.id).toBe('event-uuid');
       expect(mockEventRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'event-uuid' },
+        relations: { creator: true },
       });
     });
 

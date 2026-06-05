@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -24,6 +24,7 @@ export class EventsService {
     const newEvent = this.eventRepository.create({
       ...eventData,
       creatorId,
+      category: eventData.category || 'OTHER',
     });
 
     const savedEvent = await this.eventRepository.save(newEvent);
@@ -41,10 +42,23 @@ export class EventsService {
     return savedEvent;
   }
 
-  async findAll(): Promise<Event[]> {
-    return this.eventRepository.find({
+  async findAll(query: { page?: number; limit?: number; category?: string; search?: string } = {}): Promise<{ data: Event[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { page = 1, limit = 10, category, search } = query;
+
+    const where: any = {};
+    if (category) where.category = category;
+    if (search) {
+      where.title = ILike(`%${search}%`);
+    }
+
+    const [data, total] = await this.eventRepository.findAndCount({
+      where,
       order: { date: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findByCreator(creatorId: string): Promise<Event[]> {
@@ -55,7 +69,7 @@ export class EventsService {
   }
 
   async findOne(id: string): Promise<Event> {
-    const event = await this.eventRepository.findOne({ where: { id } });
+    const event = await this.eventRepository.findOne({ where: { id }, relations: { creator: true } });
     if (!event) {
       throw new NotFoundException(`Event with ID ${id} not found.`);
     }

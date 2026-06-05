@@ -268,7 +268,7 @@ export default function ExploreEvents() {
                   <div
                     key={event.id}
                     onClick={() => navigate(`/event/${event.id}`)}
-                    className="bg-surface-container rounded-xl border border-outline-variant/20 flex flex-row h-[140px] active:scale-[0.98] transition-transform cursor-pointer hover:border-primary/50"
+                    className="bg-surface-container rounded-xl border border-outline-variant/20 flex flex-row min-h-[130px] active:scale-[0.98] transition-transform cursor-pointer hover:border-primary/50"
                   >
                     <div className="w-[120px] h-full flex-shrink-0 relative bg-surface-container-highest flex items-center justify-center">
                       <div className="text-center">
@@ -298,11 +298,11 @@ export default function ExploreEvents() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="font-body-md font-semibold text-on-background">
+                      <div className="flex items-center justify-between mt-2 gap-2">
+                        <span className="font-body-md font-semibold text-on-background shrink-0">
                           {formatPrice(event.price)}
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <div onClick={(e) => e.stopPropagation()}>
                             <ShareButton
                               url={`${window.location.origin}/event/${event.id}`}
@@ -310,10 +310,10 @@ export default function ExploreEvents() {
                             />
                           </div>
                           <button
-                            onClick={() => navigate(`/event/${event.id}`)}
-                            className="border border-outline-variant text-on-surface px-3 py-1.5 rounded-full font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/event/${event.id}`); }}
+                            className="border border-outline-variant text-on-surface px-2.5 py-1.5 rounded-full font-label-sm text-[11px] whitespace-nowrap hover:bg-surface-container-higher transition-colors"
                           >
-                            View Details
+                            View
                           </button>
                         </div>
                       </div>

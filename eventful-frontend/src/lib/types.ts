@@ -1,5 +1,14 @@
 export type Role = "CREATOR" | "EVENTEE";
 
+export type EventCategory =
+  | "CONCERT"
+  | "SPORTS"
+  | "THEATER"
+  | "FESTIVAL"
+  | "WORKSHOP"
+  | "CONFERENCE"
+  | "OTHER";
+
 export interface User {
   id: string;
   email: string;
@@ -13,6 +22,12 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface EventCreator {
+  id: string;
+  name?: string;
+  email: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -22,9 +37,10 @@ export interface Event {
   price: string;
   capacity: number;
   ticketsSold: number;
-  category: string;
+  category: EventCategory;
   creatorId: string;
-  creator?: { id: string; name?: string; email: string };
+  creator?: EventCreator;
+  reminderConfig?: string[];
   createdAt: string;
 }
 
@@ -77,7 +93,7 @@ export interface CreateEventPayload {
   date: string;
   price: number;
   capacity: number;
-  category?: string;
+  category?: EventCategory;
 }
 
 export interface TicketWithAttendee extends Ticket {

@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import BottomNav from "../components/BottomNav";
 import api from "../lib/api";
-import type { Event, CreateEventPayload } from "../lib/types";
+import type { Event, CreateEventPayload, EventCategory } from "../lib/types";
 
 type FormMode = "create" | "edit";
 
@@ -223,7 +223,7 @@ export default function ManageEvents() {
                 <label className="font-label-sm text-label-sm text-on-surface-variant mb-1 block ml-1">Category</label>
                 <select
                   value={form.category || "OTHER"}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  onChange={(e) => setForm({ ...form, category: e.target.value as EventCategory })}
                   className="w-full bg-surface border border-outline-variant/50 rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary font-body-md text-body-md appearance-none"
                 >
                   {CATEGORIES.map((c) => (

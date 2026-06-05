@@ -1,6 +1,8 @@
 import * as supertest from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import { UserCacheInterceptor } from '../src/common/interceptors/user-cache.interceptor';
 import { AnalyticsController } from '../src/modules/analytics/analytics.controller';
 import { AnalyticsService } from '../src/modules/analytics/analytics.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
@@ -22,6 +24,9 @@ describe('Analytics (e2e)', () => {
     },
   };
 
+  const CI_REFLECTOR = Reflect.getMetadata('design:paramtypes', CacheInterceptor)?.[1] ?? Reflector;
+  const CI_ADAPTER_HOST = Reflect.getMetadata('design:type', CacheInterceptor.prototype, 'httpAdapterHost');
+
   beforeAll(async () => {
     analyticsService = {
       getCreatorAnalytics: jest.fn(),
@@ -31,7 +36,9 @@ describe('Analytics (e2e)', () => {
       controllers: [AnalyticsController],
       providers: [
         { provide: AnalyticsService, useValue: analyticsService },
-        { provide: Reflector, useValue: new Reflector() },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), clear: jest.fn() } },
+        { provide: CI_REFLECTOR, useValue: new (CI_REFLECTOR as any)() },
+        { provide: CI_ADAPTER_HOST, useValue: { httpAdapter: { getRequestMethod: jest.fn().mockReturnValue('POST'), getRequestUrl: jest.fn() } } },
       ],
     })
       .overrideGuard(JwtAuthGuard)

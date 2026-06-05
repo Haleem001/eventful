@@ -1,6 +1,8 @@
 import * as supertest from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import { UserCacheInterceptor } from '../src/common/interceptors/user-cache.interceptor';
 import { TicketsController } from '../src/modules/tickets/tickets.controller';
 import { TicketsService } from '../src/modules/tickets/tickets.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
@@ -11,6 +13,9 @@ import { Role } from '../src/modules/auth/enums/role.enum';
 const request = (supertest as any).default || supertest;
 
 const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000';
+
+const CI_REFLECTOR = Reflect.getMetadata('design:paramtypes', CacheInterceptor)?.[1] ?? Reflector;
+const CI_ADAPTER_HOST = Reflect.getMetadata('design:type', CacheInterceptor.prototype, 'httpAdapterHost');
 
 describe('Tickets (e2e)', () => {
   let app: INestApplication;
@@ -37,7 +42,9 @@ describe('Tickets (e2e)', () => {
       controllers: [TicketsController],
       providers: [
         { provide: TicketsService, useValue: ticketsService },
-        { provide: Reflector, useValue: new Reflector() },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), clear: jest.fn() } },
+        { provide: CI_REFLECTOR, useValue: new (CI_REFLECTOR as any)() },
+        { provide: CI_ADAPTER_HOST, useValue: { httpAdapter: { getRequestMethod: jest.fn().mockReturnValue('POST'), getRequestUrl: jest.fn() } } },
       ],
     })
       .overrideGuard(JwtAuthGuard)

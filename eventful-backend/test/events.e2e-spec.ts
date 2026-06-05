@@ -1,6 +1,8 @@
 import * as supertest from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import { Reflector } from '@nestjs/core';
 import { EventsController } from '../src/modules/events/events.controller';
 import { EventsService } from '../src/modules/events/events.service';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
@@ -8,6 +10,9 @@ import { RolesGuard } from '../src/common/guards/roles.guard';
 import { Role } from '../src/modules/auth/enums/role.enum';
 
 const request = (supertest as any).default || supertest;
+
+const CI_REFLECTOR = Reflect.getMetadata('design:paramtypes', CacheInterceptor)?.[1] ?? Reflector;
+const CI_ADAPTER_HOST = Reflect.getMetadata('design:type', CacheInterceptor.prototype, 'httpAdapterHost');
 
 describe('Events (e2e)', () => {
   let app: INestApplication;
@@ -33,6 +38,9 @@ describe('Events (e2e)', () => {
       controllers: [EventsController],
       providers: [
         { provide: EventsService, useValue: eventsService },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), clear: jest.fn() } },
+        { provide: CI_REFLECTOR, useValue: new (CI_REFLECTOR as any)() },
+        { provide: CI_ADAPTER_HOST, useValue: { httpAdapter: { getRequestMethod: jest.fn().mockReturnValue('POST'), getRequestUrl: jest.fn() } } },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -53,27 +61,33 @@ describe('Events (e2e)', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('GET /events', () => {
-    it('should return all events', async () => {
-      eventsService.findAll.mockResolvedValue([
-        { id: 'evt-1', title: 'Event 1', description: 'Desc', venue: 'V', date: new Date(), price: '50', capacity: 100, ticketsSold: 0, creatorId: 'c1', createdAt: new Date() } as any,
-      ]);
+    it('should return paginated events', async () => {
+      eventsService.findAll.mockResolvedValue({
+        data: [{ id: 'evt-1', title: 'Event 1', description: 'Desc', venue: 'V', date: new Date(), price: '50', capacity: 100, ticketsSold: 0, creatorId: 'c1', createdAt: new Date() } as any],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
 
       const res = await request(app.getHttpServer())
         .get('/events')
         .expect(200);
 
-      expect(res.body).toHaveLength(1);
-      expect(res.body[0].title).toBe('Event 1');
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].title).toBe('Event 1');
+      expect(res.body.total).toBe(1);
     });
 
-    it('should return empty array when no events', async () => {
-      eventsService.findAll.mockResolvedValue([]);
+    it('should return empty result when no events', async () => {
+      eventsService.findAll.mockResolvedValue({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 });
 
       const res = await request(app.getHttpServer())
         .get('/events')
         .expect(200);
 
-      expect(res.body).toEqual([]);
+      expect(res.body.data).toEqual([]);
+      expect(res.body.total).toBe(0);
     });
   });
 

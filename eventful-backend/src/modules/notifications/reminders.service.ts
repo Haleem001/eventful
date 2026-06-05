@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
 import { Interval } from '@nestjs/schedule';
@@ -56,6 +56,17 @@ export class RemindersService {
       relations: { event: true },
       order: { remindAt: 'ASC' },
     });
+  }
+
+  async remove(id: string, userId: string): Promise<void> {
+    const reminder = await this.reminderRepository.findOne({ where: { id } });
+    if (!reminder) {
+      throw new NotFoundException(`Reminder with ID ${id} not found.`);
+    }
+    if (reminder.userId !== userId) {
+      throw new NotFoundException(`Reminder with ID ${id} not found.`);
+    }
+    await this.reminderRepository.remove(reminder);
   }
 
   @Interval(60000)

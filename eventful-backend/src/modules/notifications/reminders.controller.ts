@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Req, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { RemindersService } from './reminders.service';
 import { SetReminderDto } from './dto/set-reminder.dto';
@@ -30,5 +31,24 @@ export class RemindersController {
       ReminderType.EVENTEE_REMINDER,
       new Date(dto.remindAt),
     );
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List authenticated user reminders' })
+  @ApiOkResponse({ description: 'Reminders retrieved.' })
+  async findByUser(@Req() req: any) {
+    return this.remindersService.findByUser(req.user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a reminder' })
+  @ApiOkResponse({ description: 'Reminder deleted.' })
+  async remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    await this.remindersService.remove(id, req.user.id);
+    return { message: 'Reminder deleted.' };
   }
 }

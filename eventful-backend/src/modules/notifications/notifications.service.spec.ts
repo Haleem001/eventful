@@ -18,6 +18,7 @@ describe('NotificationsService', () => {
 
   const mockConfigService = {
     getOrThrow: jest.fn().mockReturnValue('re_test_key'),
+    get: jest.fn().mockReturnValue('Eventful <eventful-reminders@mahmoudhaleem.dev>'),
   };
 
   beforeEach(async () => {

@@ -77,9 +77,9 @@ describe('AnalyticsService', () => {
       );
 
       mockEventQueryBuilder.getMany.mockResolvedValue([mockEvent]);
-      mockScanQueryBuilder.getRawMany.mockResolvedValue([
-        { eventId: 'event-uuid', scanned: '10' },
-      ]);
+      mockScanQueryBuilder.getRawMany
+        .mockResolvedValueOnce([{ eventId: 'event-uuid', count: '45' }])
+        .mockResolvedValueOnce([{ eventId: 'event-uuid', scanned: '10' }]);
 
       const result = await service.getCreatorAnalytics('creator-uuid');
 
@@ -121,7 +121,9 @@ describe('AnalyticsService', () => {
       );
 
       mockEventQueryBuilder.getMany.mockResolvedValue([mockEvent]);
-      mockScanQueryBuilder.getRawMany.mockResolvedValue([]);
+      mockScanQueryBuilder.getRawMany
+        .mockResolvedValueOnce([{ eventId: 'event-uuid', count: '45' }])
+        .mockResolvedValueOnce([]);
 
       const result = await service.getCreatorAnalytics('creator-uuid');
 

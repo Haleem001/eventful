@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Req, UseInterceptors, Inject } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req, UseInterceptors, Inject } from '@nestjs/common';
 import { CacheTTL, CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -34,8 +34,12 @@ export class AnalyticsController {
   @ApiForbiddenResponse({
     description: 'Access denied. Only CREATOR role can access this endpoint.',
   })
-  async getCreatorAnalytics(@Req() req: any) {
-    return this.analyticsService.getCreatorAnalytics(req.user.id);
+  async getCreatorAnalytics(
+    @Req() req: any,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.analyticsService.getCreatorAnalytics(req.user.id, from, to);
   }
 
   async clearCreatorCache(userId: string) {

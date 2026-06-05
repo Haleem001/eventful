@@ -30,7 +30,7 @@ export class AnalyticsService {
     private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
-  async getCreatorAnalytics(creatorId: string): Promise<CreatorAnalytics> {
+  async getCreatorAnalytics(creatorId: string, from?: string, to?: string): Promise<CreatorAnalytics> {
     const events = await this.eventRepository
       .createQueryBuilder('event')
       .select(['event.id', 'event.title', 'event.capacity', 'event.price'])
@@ -43,23 +43,32 @@ export class AnalyticsService {
       return { totalRevenue: 0, totalTicketsSold: 0, totalScanned: 0, events: [] };
     }
 
+    const paidQuery = this.ticketRepository
+      .createQueryBuilder('ticket')
+      .select('ticket."eventId"', 'eventId')
+      .addSelect('COUNT(*)', 'count')
+      .where('ticket."eventId" IN (:...eventIds)', { eventIds })
+      .andWhere('ticket.status = :status', { status: TicketStatus.PAID });
+
+    const scanQuery = this.ticketRepository
+      .createQueryBuilder('ticket')
+      .select('ticket."eventId"', 'eventId')
+      .addSelect('COUNT(*)', 'scanned')
+      .where('ticket."eventId" IN (:...eventIds)', { eventIds })
+      .andWhere('ticket."isScanned" = :isScanned', { isScanned: true });
+
+    if (from) {
+      paidQuery.andWhere('ticket."createdAt" >= :from', { from: new Date(from) });
+      scanQuery.andWhere('ticket."createdAt" >= :from', { from: new Date(from) });
+    }
+    if (to) {
+      paidQuery.andWhere('ticket."createdAt" <= :to', { to: new Date(to) });
+      scanQuery.andWhere('ticket."createdAt" <= :to', { to: new Date(to) });
+    }
+
     const [paidCounts, scanCounts] = await Promise.all([
-      this.ticketRepository
-        .createQueryBuilder('ticket')
-        .select('ticket."eventId"', 'eventId')
-        .addSelect('COUNT(*)', 'count')
-        .where('ticket."eventId" IN (:...eventIds)', { eventIds })
-        .andWhere('ticket.status = :status', { status: TicketStatus.PAID })
-        .groupBy('ticket."eventId"')
-        .getRawMany<{ eventId: string; count: string }>(),
-      this.ticketRepository
-        .createQueryBuilder('ticket')
-        .select('ticket."eventId"', 'eventId')
-        .addSelect('COUNT(*)', 'scanned')
-        .where('ticket."eventId" IN (:...eventIds)', { eventIds })
-        .andWhere('ticket."isScanned" = :isScanned', { isScanned: true })
-        .groupBy('ticket."eventId"')
-        .getRawMany<{ eventId: string; scanned: string }>(),
+      paidQuery.groupBy('ticket."eventId"').getRawMany<{ eventId: string; count: string }>(),
+      scanQuery.groupBy('ticket."eventId"').getRawMany<{ eventId: string; scanned: string }>(),
     ]);
 
     const paidMap = new Map(paidCounts.map((r) => [r.eventId, parseInt(r.count, 10)]));

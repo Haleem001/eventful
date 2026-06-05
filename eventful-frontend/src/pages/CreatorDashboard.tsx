@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -13,14 +13,25 @@ export default function CreatorDashboard() {
   const [analytics, setAnalytics] = useState<CreatorAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  useEffect(() => {
+  const fetchAnalytics = useCallback((from: string, to: string) => {
     if (!user || user.role !== "CREATOR") return;
-    api.get<CreatorAnalytics>("/analytics/creator")
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    const qs = params.toString();
+    api.get<CreatorAnalytics>(`/analytics/creator${qs ? `?${qs}` : ""}`)
       .then((res) => setAnalytics(res.data))
       .catch((err) => toast(err?.response?.data?.message || "Failed to load analytics", "error"))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, toast]);
+
+  useEffect(() => {
+    fetchAnalytics(dateFrom, dateTo);
+  }, [dateFrom, dateTo, fetchAnalytics]);
 
   const breakdown = analytics?.events?.[0];
   const attendanceRate = analytics && analytics.totalTicketsSold > 0
@@ -61,6 +72,13 @@ export default function CreatorDashboard() {
                 <div className="px-4 py-3 border-b border-outline-variant/20">
                   <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
                 </div>
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate("/profile"); }}
+                  className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  Profile
+                </button>
                 <button
                   onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
                   className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
@@ -104,6 +122,35 @@ export default function CreatorDashboard() {
               </div>
             </section>
 
+            <section className="flex items-center gap-3 mb-stack-sm">
+              <div className="flex-1">
+                <label className="font-label-sm text-[11px] text-on-surface-variant mb-1 block ml-1">From</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full bg-surface border border-outline-variant/50 rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="font-label-sm text-[11px] text-on-surface-variant mb-1 block ml-1">To</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full bg-surface border border-outline-variant/50 rounded-xl px-3 py-2 text-on-surface text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="self-end p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+                  title="Clear filter"
+                >
+                  <span className="material-symbols-outlined text-[18px]">clear</span>
+                </button>
+              )}
+            </section>
             <section className="grid grid-cols-2 gap-gutter mb-stack-lg">
               <div className="bg-surface-container rounded-xl p-4 border border-outline-variant/20 shadow-lg relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>

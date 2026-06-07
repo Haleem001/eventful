@@ -11,6 +11,7 @@ import {
   Req,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -31,9 +32,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 @ApiTags('Events')
 @Controller('events')
 export class EventsController {
-  constructor(
-    private readonly eventsService: EventsService,
-  ) {}
+  constructor(private readonly eventsService: EventsService) {}
 
   @Post()
   @ApiBearerAuth()
@@ -50,6 +49,7 @@ export class EventsController {
   }
 
   @Get()
+  @Throttle({ default: { ttl: 60000, limit: 60 } })
   @ApiOperation({ summary: 'Browse all live marketplace events (Public)' })
   @ApiOkResponse({
     description: 'List of all active events retrieved successfully.',
@@ -59,8 +59,11 @@ export class EventsController {
     @Query('limit') limit?: number,
     @Query('category') category?: string,
     @Query('search') search?: string,
+    @Query('location') location?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
   ) {
-    return this.eventsService.findAll({ page, limit, category, search });
+    return this.eventsService.findAll({ page, limit, category, search, location, dateFrom, dateTo });
   }
 
   @Get('creator')

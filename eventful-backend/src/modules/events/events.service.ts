@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -42,13 +42,20 @@ export class EventsService {
     return savedEvent;
   }
 
-  async findAll(query: { page?: number; limit?: number; category?: string; search?: string } = {}): Promise<{ data: Event[]; total: number; page: number; limit: number; totalPages: number }> {
-    const { page = 1, limit = 10, category, search } = query;
+  async findAll(query: { page?: number; limit?: number; category?: string; search?: string; location?: string; dateFrom?: string; dateTo?: string } = {}): Promise<{ data: Event[]; total: number; page: number; limit: number; totalPages: number }> {
+    const { page = 1, limit = 10, category, search, location, dateFrom, dateTo } = query;
 
     const where: any = {};
     if (category) where.category = category;
-    if (search) {
-      where.title = ILike(`%${search}%`);
+    if (search) where.title = ILike(`%${search}%`);
+    if (location) where.venue = ILike(`%${location}%`);
+
+    if (dateFrom && dateTo) {
+      where.date = Between(new Date(dateFrom), new Date(dateTo));
+    } else if (dateFrom) {
+      where.date = MoreThanOrEqual(new Date(dateFrom));
+    } else if (dateTo) {
+      where.date = LessThanOrEqual(new Date(dateTo));
     }
 
     const [data, total] = await this.eventRepository.findAndCount({

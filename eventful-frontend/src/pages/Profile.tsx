@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import BottomNav from "../components/BottomNav";
 import api from "../lib/api";
+import { SkeletonProfile } from "../components/Skeleton";
 
 interface ProfileData {
   name?: string;
@@ -69,8 +70,8 @@ export default function Profile() {
           </button>
           <h1 className="font-headline-md text-headline-md-mobile font-black text-primary ml-2">Profile</h1>
         </header>
-        <main className="flex-grow flex items-center justify-center pt-16">
-          <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <main className="flex-grow pt-16">
+          <SkeletonProfile />
         </main>
       </div>
     );

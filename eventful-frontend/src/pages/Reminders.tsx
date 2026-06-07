@@ -4,6 +4,7 @@ import { useToast } from "../contexts/ToastContext";
 import BottomNav from "../components/BottomNav";
 import api from "../lib/api";
 import type { Reminder } from "../lib/types";
+import { SkeletonReminders } from "../components/Skeleton";
 
 export default function Reminders() {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ export default function Reminders() {
           </button>
           <h1 className="font-headline-md text-headline-md-mobile font-black text-primary ml-2">Reminders</h1>
         </header>
-        <main className="flex-grow flex items-center justify-center pt-16">
-          <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <main className="flex-grow pt-16">
+          <SkeletonReminders />
         </main>
       </div>
     );

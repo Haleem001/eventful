@@ -107,3 +107,63 @@ export function SkeletonTicketDetail() {
     </div>
   );
 }
+
+export function SkeletonReminders() {
+  return (
+    <div className="animate-pulse px-container-margin pt-20 space-y-3">
+      <div className="h-5 bg-surface-container-highest rounded w-24 mb-6" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="bg-surface-container rounded-2xl border border-outline-variant/20 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-surface-container-highest rounded w-2/3" />
+              <div className="h-3 bg-surface-container-highest rounded w-1/2" />
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-surface-container-highest" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonProfile() {
+  return (
+    <div className="animate-pulse px-container-margin pt-20 space-y-6">
+      <div className="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-14 h-14 rounded-full bg-surface-container-highest" />
+          <div className="space-y-2">
+            <div className="h-4 bg-surface-container-highest rounded w-28" />
+            <div className="h-3 bg-surface-container-highest rounded w-40" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <div className="h-3 bg-surface-container-highest rounded w-10" />
+            <div className="h-11 bg-surface-container-highest rounded-xl" />
+          </div>
+          <div className="space-y-1">
+            <div className="h-3 bg-surface-container-highest rounded w-8" />
+            <div className="h-11 bg-surface-container-highest rounded-xl" />
+          </div>
+          <div className="h-11 bg-surface-container-highest rounded-xl" />
+        </div>
+      </div>
+      <div className="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+        <div className="h-5 bg-surface-container-highest rounded w-36 mb-4" />
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <div className="h-3 bg-surface-container-highest rounded w-20" />
+            <div className="h-11 bg-surface-container-highest rounded-xl" />
+          </div>
+          <div className="space-y-1">
+            <div className="h-3 bg-surface-container-highest rounded w-14" />
+            <div className="h-11 bg-surface-container-highest rounded-xl" />
+          </div>
+          <div className="h-11 bg-surface-container-highest rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}

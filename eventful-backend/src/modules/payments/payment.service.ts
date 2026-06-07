@@ -213,6 +213,23 @@ export class PaymentService {
     return hash === signature;
   }
 
+  async getTransactions(eventId: string, creatorId: string): Promise<any[]> {
+    const event = await this.eventsService.findOne(eventId);
+    if (event.creatorId !== creatorId) {
+      throw new HttpException('Event not found.', HttpStatus.NOT_FOUND);
+    }
+    const tickets = await this.ticketsService.findByEvent(eventId, creatorId);
+    return tickets.map((t: any) => ({
+      id: t.id,
+      reference: t.reference,
+      amount: Number(event.price),
+      attendeeEmail: t.eventee?.email || 'N/A',
+      status: t.status,
+      isScanned: t.isScanned,
+      purchasedAt: t.createdAt,
+    }));
+  }
+
   async handleWebhook(payload: any): Promise<{ status: string }> {
     if (payload.event !== 'charge.success') {
       return { status: 'ignored' };

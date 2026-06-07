@@ -1,13 +1,16 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Param,
   Headers,
   Req,
   UseGuards,
   HttpCode,
   HttpStatus,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -20,6 +23,9 @@ import {
 import { PaymentService } from './payment.service';
 import { InitializePaymentDto } from './dto/initialize-payment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 import { EventsService } from '../events/events.service';
 import type { Request } from 'express';
 
@@ -73,6 +79,18 @@ export class PaymentController {
     const result = await this.paymentService.verifyPayment(reference, req.user.id);
     await this.cacheManager.del(`${req.user.id}:/api/tickets/user`);
     return result;
+  }
+
+  @Get('transactions/:eventId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.CREATOR)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get payment transactions for an event (Creator only)' })
+  async getTransactions(
+    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Req() req: any,
+  ) {
+    return this.paymentService.getTransactions(eventId, req.user.id);
   }
 
   @Post('webhook')

@@ -89,12 +89,14 @@ export default function ExploreEvents() {
 
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md antialiased">
-      <header className="bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
-        <div className="flex items-center gap-1 text-on-surface-variant hover:opacity-80 transition-opacity cursor-pointer">
-          <span className="material-symbols-outlined text-[20px]">location_on</span>
-          <span className="font-label-sm text-label-sm">Abuja, NG</span>
-        </div>
-        <h1 className="font-headline-md text-headline-md-mobile font-black text-primary absolute left-1/2 -translate-x-1/2">
+      <header className="bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/30 flex items-center justify-between px-container-margin py-stack-sm">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-8 h-8 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        </button>
+        <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">
           Eventful
         </h1>
         <div className="relative">
@@ -218,8 +220,7 @@ export default function ExploreEvents() {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="px-2 py-0.5 rounded bg-primary/20 text-primary font-label-sm text-label-sm backdrop-blur-md">Featured</span>
-                          <span className="text-secondary font-label-sm text-label-sm">Top Pick</span>
+                          <span className="px-2 py-0.5 rounded bg-primary/20 text-primary font-label-sm text-label-sm backdrop-blur-md">Next Up</span>
                         </div>
                         <h2 className="font-headline-md text-headline-md-mobile text-on-background mb-1">{events[0].title}</h2>
                         <div className="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">

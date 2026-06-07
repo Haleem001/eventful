@@ -1,8 +1,9 @@
-import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { TicketsService } from '../tickets/tickets.service';
 import { RemindersService } from '../notifications/reminders.service';
 import { ReminderType } from '../notifications/enums/reminder-type.enum';
@@ -10,6 +11,7 @@ import { EventsService } from '../events/events.service';
 
 @Injectable()
 export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
   private readonly baseUrl = 'https://api.paystack.co';
 
   constructor(
@@ -34,15 +36,19 @@ export class PaymentService {
     };
   }
 
+  generateReference(eventId: string): string {
+    return `evt_${uuidv4().slice(0, 8)}`;
+  }
+
   async initializePayment(
     email: string,
     amount: number,
-    reference: string,
     eventId: string,
     eventeeId: string,
     callbackUrl?: string,
     reminder?: string,
   ): Promise<{ authorizationUrl: string; reference: string }> {
+    const reference = this.generateReference(eventId);
     const amountInKobo = Math.round(amount * 100);
 
     const metadata: Record<string, any> = { eventeeId, eventId };
@@ -165,7 +171,9 @@ export class PaymentService {
             ReminderType.EVENTEE_REMINDER,
             remindAt,
           );
-        } catch {}
+        } catch (err) {
+          this.logger.warn(`Reminder creation failed for ticket ${reference}: ${err}`);
+        }
       }
 
       return ticket;
@@ -192,6 +200,30 @@ export class PaymentService {
       .update(body)
       .digest('hex');
     return hash === signature;
+  }
+
+  async handleWebhook(payload: any): Promise<{ status: string }> {
+    if (payload.event !== 'charge.success') {
+      return { status: 'ignored' };
+    }
+
+    const { reference, status, metadata } = payload.data;
+    if (status !== 'success') {
+      return { status: 'payment not successful' };
+    }
+
+    const existingTicket = await this.ticketsService.findByReference(reference);
+    if (existingTicket) {
+      return { status: 'duplicate' };
+    }
+
+    await this.ticketsService.create(
+      reference,
+      metadata.eventeeId,
+      metadata.eventId,
+    );
+
+    return { status: 'success' };
   }
 }
 

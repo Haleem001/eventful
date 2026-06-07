@@ -18,6 +18,14 @@ const CATEGORIES = [
   { label: "Conference", value: "CONFERENCE" },
 ];
 
+const REMINDER_OPTIONS = [
+  { label: "1 Hour Before", value: "1_HOUR_BEFORE" },
+  { label: "1 Day Before", value: "1_DAY_BEFORE" },
+  { label: "2 Days Before", value: "2_DAYS_BEFORE" },
+  { label: "1 Week Before", value: "1_WEEK_BEFORE" },
+  { label: "2 Weeks Before", value: "2_WEEKS_BEFORE" },
+];
+
 export default function ManageEvents() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -30,7 +38,7 @@ export default function ManageEvents() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CreateEventPayload>({
-    title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER",
+    title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER", reminderConfig: [],
   });
 
   const fetchEvents = () => {
@@ -46,7 +54,7 @@ export default function ManageEvents() {
   }, [user]);
 
   const openCreate = () => {
-    setForm({ title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER" });
+    setForm({ title: "", description: "", venue: "", date: "", price: 0, capacity: 0, category: "OTHER", reminderConfig: [] });
     setFormMode("create");
     setEditingId(null);
     setShowForm(true);
@@ -61,6 +69,7 @@ export default function ManageEvents() {
       price: Number(ev.price),
       capacity: ev.capacity,
       category: ev.category,
+      reminderConfig: (ev as any).reminderConfig || [],
     });
     setFormMode("edit");
     setEditingId(ev.id);
@@ -230,6 +239,36 @@ export default function ManageEvents() {
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="font-label-sm text-label-sm text-on-surface-variant mb-2 block ml-1">Reminders</label>
+                <div className="flex flex-wrap gap-2">
+                  {REMINDER_OPTIONS.map((opt) => {
+                    const selected = form.reminderConfig?.includes(opt.value) || false;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          const next = selected
+                            ? (form.reminderConfig || []).filter((v) => v !== opt.value)
+                            : [...(form.reminderConfig || []), opt.value];
+                          setForm({ ...form, reminderConfig: next });
+                        }}
+                        className={`px-3 py-1.5 rounded-full font-label-sm text-[11px] border transition-colors ${
+                          selected
+                            ? "bg-primary/20 border-primary text-primary"
+                            : "bg-surface border-outline-variant/50 text-on-surface-variant hover:border-primary/50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="font-label-sm text-[11px] text-on-surface-variant/60 mt-1 ml-1">
+                  You'll be reminded before the event starts.
+                </p>
               </div>
               <div className="flex gap-3 mt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-outline-variant text-on-surface-variant px-4 py-3 rounded-xl font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Cancel</button>

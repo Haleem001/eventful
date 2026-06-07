@@ -12,6 +12,14 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+const REMINDER_OPTIONS = [
+  '1_DAY_BEFORE',
+  '2_DAYS_BEFORE',
+  '1_WEEK_BEFORE',
+  '2_WEEKS_BEFORE',
+  '1_HOUR_BEFORE',
+] as const;
+
 export class UpdateEventDto {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -55,4 +63,15 @@ export class UpdateEventDto {
   @IsString()
   @IsIn(['CONCERT', 'SPORTS', 'THEATER', 'FESTIVAL', 'WORKSHOP', 'CONFERENCE', 'OTHER'])
   category?: string;
+
+  @ApiProperty({
+    example: ['1_DAY_BEFORE', '1_WEEK_BEFORE'],
+    description: 'Reminder schedule for the creator before the event date.',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(REMINDER_OPTIONS, { each: true })
+  @ArrayMaxSize(5)
+  reminderConfig?: string[];
 }

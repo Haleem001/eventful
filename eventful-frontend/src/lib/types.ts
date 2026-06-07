@@ -94,6 +94,7 @@ export interface CreateEventPayload {
   price: number;
   capacity: number;
   category?: EventCategory;
+  reminderConfig?: string[];
 }
 
 export interface TicketWithAttendee extends Ticket {

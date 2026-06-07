@@ -88,8 +88,21 @@ export class EventsService {
     if (event.creatorId !== creatorId) {
       throw new ForbiddenException('You can only edit your own events.');
     }
-    Object.assign(event, updateEventDto);
-    return this.eventRepository.save(event);
+    const { reminderConfig, ...eventData } = updateEventDto;
+    Object.assign(event, eventData);
+    const savedEvent = await this.eventRepository.save(event);
+
+    if (reminderConfig) {
+      await this.remindersService.createFromConfig(
+        savedEvent.id,
+        creatorId,
+        ReminderType.CREATOR_REMINDER,
+        new Date(savedEvent.date),
+        reminderConfig,
+      );
+    }
+
+    return savedEvent;
   }
 
   async remove(id: string, creatorId: string): Promise<void> {

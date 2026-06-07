@@ -57,6 +57,10 @@ export default function EventDetails() {
   const dayName = eventDate.toLocaleDateString("en-US", { weekday: "long" });
   const monthDay = eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timeStr = eventDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const remaining = event.capacity - event.ticketsSold;
+  const sellOutThreshold = Math.max(5, Math.ceil(event.capacity * 0.15));
+  const isLowStock = remaining > 0 && remaining <= sellOutThreshold;
+  const isSoldOut = remaining <= 0;
 
   return (
     <div className="min-h-screen bg-background text-on-background relative overflow-x-hidden md:flex md:justify-center">
@@ -69,9 +73,6 @@ export default function EventDetails() {
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <div className="flex gap-gutter">
-            <button className="w-10 h-10 rounded-full bg-surface-container/60 backdrop-blur-md flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95">
-              <span className="material-symbols-outlined">favorite_border</span>
-            </button>
             <ShareButton
               url={`${window.location.origin}/event/${event.id}`}
               title={event.title}
@@ -84,8 +85,10 @@ export default function EventDetails() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
           <div className="absolute bottom-8 left-container-margin right-container-margin">
             <div className="inline-flex items-center gap-1.5 bg-surface/60 backdrop-blur-md px-3 py-1.5 rounded-full mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-              <span className="font-label-sm text-label-sm text-on-surface">{event.ticketsSold} going</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${isLowStock ? "bg-[#f97316] animate-pulse" : isSoldOut ? "bg-red-500" : "bg-primary animate-pulse"}`}></span>
+              <span className="font-label-sm text-label-sm text-on-surface">
+                {isSoldOut ? "Sold out" : isLowStock ? `${remaining} left` : `${event.ticketsSold} going`}
+              </span>
             </div>
           </div>
         </div>
@@ -159,36 +162,56 @@ export default function EventDetails() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 mb-stack-lg">
-              <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 border border-outline-variant/30">
-                <span className="material-symbols-outlined text-primary">location_on</span>
-              </div>
-              <div className="min-w-0">
-                <p className="font-body-lg text-body-lg text-on-surface font-semibold">{event.venue}</p>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Capacity: {event.capacity}</p>
-              </div>
-            </div>
           </div>
         </div>
 
         <div className="absolute bottom-0 w-full bg-surface/80 backdrop-blur-xl border-t border-outline-variant/20 px-container-margin py-stack-md z-50">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="min-w-0 shrink-0">
               <p className="font-label-sm text-label-sm text-on-surface-variant">Total Price</p>
               <p className="font-headline-md text-headline-md text-on-surface">
                 ₦{Number(event.price).toLocaleString()}
               </p>
+              {isLowStock && (
+                <p className="font-label-sm text-label-sm text-[#f97316] font-semibold mt-0.5">
+                  Only {remaining} left
+                </p>
+              )}
+              {isSoldOut && (
+                <p className="font-label-sm text-label-sm text-red-500 font-semibold mt-0.5">
+                  No tickets available
+                </p>
+              )}
             </div>
             <button
               onClick={handleBuyTicket}
-              disabled={buying}
-              className="bg-primary text-on-primary-fixed font-headline-md text-headline-md px-8 py-3 rounded-full hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
-              style={{ boxShadow: buying ? "none" : "0 0 20px rgba(78,222,163,0.3)" }}
+              disabled={buying || isSoldOut}
+              className={`font-headline-md text-headline-md px-8 py-3 rounded-full active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 ${
+                isLowStock
+                  ? "bg-[#f97316] text-white hover:bg-[#ea580c]"
+                  : isSoldOut
+                    ? "bg-surface-container-high text-on-surface-variant cursor-not-allowed"
+                    : "bg-primary text-on-primary-fixed hover:bg-primary/90"
+              }`}
+              style={{
+                boxShadow: buying
+                  ? "none"
+                  : isLowStock
+                    ? "0 0 24px rgba(249,115,22,0.35)"
+                    : "0 0 20px rgba(78,222,163,0.3)",
+              }}
             >
               {buying ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   Processing...
+                </>
+              ) : isSoldOut ? (
+                "Sold Out"
+              ) : isLowStock ? (
+                <>
+                  Buy Now
+                  <span className="material-symbols-outlined text-[18px]">bolt</span>
                 </>
               ) : (
                 "Buy Ticket"

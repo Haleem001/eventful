@@ -61,7 +61,6 @@ describe('PaymentService', () => {
       const result = await service.initializePayment(
         'user@example.com',
         5000,
-        'evt_ref123',
         'event-id',
         'user-id',
       );
@@ -80,7 +79,7 @@ describe('PaymentService', () => {
       );
 
       await expect(
-        service.initializePayment('user@example.com', -1, 'evt_ref123', 'event-id', 'user-id'),
+        service.initializePayment('user@example.com', -1, 'event-id', 'user-id'),
       ).rejects.toThrow(HttpException);
     });
   });
@@ -146,6 +145,110 @@ describe('PaymentService', () => {
       );
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('generateReference', () => {
+    it('should generate a reference with evt_ prefix', () => {
+      const ref = service.generateReference('event-id');
+      expect(ref).toMatch(/^evt_[a-f0-9]{8}$/);
+    });
+
+    it('should generate different references on each call', () => {
+      const ref1 = service.generateReference('event-id');
+      const ref2 = service.generateReference('event-id');
+      expect(ref1).not.toBe(ref2);
+    });
+  });
+
+  describe('handleWebhook', () => {
+    it('should return ignored for non-charge.success events', async () => {
+      const payload = { event: 'charge.failed', data: {} };
+      const result = await service.handleWebhook(payload);
+      expect(result.status).toBe('ignored');
+    });
+
+    it('should return payment not successful for failed payment', async () => {
+      const payload = {
+        event: 'charge.success',
+        data: {
+          reference: 'ref123',
+          status: 'failed',
+          metadata: {},
+        },
+      };
+      const result = await service.handleWebhook(payload);
+      expect(result.status).toBe('payment not successful');
+    });
+
+    it('should return duplicate if ticket already exists', async () => {
+      const payload = {
+        event: 'charge.success',
+        data: {
+          reference: 'ref123',
+          status: 'success',
+          metadata: { eventeeId: 'user-1', eventId: 'event-1' },
+        },
+      };
+
+      const mockTicketsService = {
+        findByReference: jest.fn().mockResolvedValue({ id: 'ticket-1' }),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          PaymentService,
+          { provide: ConfigService, useValue: mockConfigService },
+          { provide: HttpService, useValue: mockHttpService },
+          { provide: TicketsService, useValue: mockTicketsService },
+          { provide: RemindersService, useValue: mockRemindersService },
+          { provide: EventsService, useValue: mockEventsService },
+        ],
+      }).compile();
+
+      const serviceWithMocks =
+        module.get<PaymentService>(PaymentService);
+
+      const result = await serviceWithMocks.handleWebhook(payload);
+      expect(result.status).toBe('duplicate');
+    });
+
+    it('should create ticket and return success on valid webhook', async () => {
+      const payload = {
+        event: 'charge.success',
+        data: {
+          reference: 'ref123',
+          status: 'success',
+          metadata: { eventeeId: 'user-1', eventId: 'event-1' },
+        },
+      };
+
+      const mockTicketsService = {
+        findByReference: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 'ticket-1' }),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          PaymentService,
+          { provide: ConfigService, useValue: mockConfigService },
+          { provide: HttpService, useValue: mockHttpService },
+          { provide: TicketsService, useValue: mockTicketsService },
+          { provide: RemindersService, useValue: mockRemindersService },
+          { provide: EventsService, useValue: mockEventsService },
+        ],
+      }).compile();
+
+      const serviceWithMocks =
+        module.get<PaymentService>(PaymentService);
+
+      const result = await serviceWithMocks.handleWebhook(payload);
+      expect(result.status).toBe('success');
+      expect(mockTicketsService.create).toHaveBeenCalledWith(
+        'ref123',
+        'user-1',
+        'event-1',
+      );
     });
   });
 });

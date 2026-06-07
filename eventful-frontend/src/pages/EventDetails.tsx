@@ -5,6 +5,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import type { Event, InitializePaymentResponse } from "../lib/types";
 import ShareButton from "../components/ShareButton";
+import { SkeletonEventDetails } from "../components/Skeleton";
 
 export default function EventDetails() {
   const { id } = useParams();
@@ -33,7 +34,7 @@ export default function EventDetails() {
     try {
       const { data } = await api.post<InitializePaymentResponse>("/payments/initialize", {
         eventId: id,
-        callbackUrl: window.location.origin + "/ticket",
+        callbackUrl: window.location.origin + "/payment/callback",
         reminder: reminder !== "none" ? reminder : undefined,
       });
       window.location.href = data.authorizationUrl;
@@ -43,13 +44,7 @@ export default function EventDetails() {
     setBuying(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background text-on-background flex items-center justify-center">
-        <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <SkeletonEventDetails />;
 
   if (!event) return null;
 

@@ -171,9 +171,25 @@ export default function LandingPage() {
 
           <div className="relative z-10 grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-outline-variant/30 bg-surface-container/60 px-4 py-2 text-xs uppercase tracking-[0.2em] text-on-surface-variant backdrop-blur-md">
-                <span className="h-2 w-2 rounded-full bg-primary" />
-                Modern event ticketing
+              <div className="flex items-center gap-0 select-none">
+                <div className="rounded-l-md border border-r-0 border-outline-variant/25 bg-surface-container/80 px-3 py-1.5 shadow-sm">
+                  <span className="font-mono text-[10px] font-semibold tracking-wider text-primary/80">
+                    EVENTFUL
+                  </span>
+                </div>
+                <div className="flex items-center gap-[2px] px-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-3 w-[2px] rounded-full bg-outline-variant/30"
+                    />
+                  ))}
+                </div>
+                <div className="rounded-r-md border border-l-0 border-outline-variant/25 bg-surface-container/80 px-3 py-1.5 shadow-sm">
+                  <span className="font-mono text-[10px] tabular-nums text-on-surface-variant/70">
+                    {events.length || 0} events
+                  </span>
+                </div>
               </div>
 
               <h1 className="mt-5 font-headline-lg text-[34px] sm:text-[44px] lg:text-[56px] text-on-background leading-[1.02] tracking-tight">
@@ -202,29 +218,14 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  ["Fast checkout", "Simple ticket buying"],
-                  ["Live scanning", "Creator check-in tools"],
-                  ["Mobile ready", "Responsive on every screen"],
-                ].map(([title, detail]) => (
-                  <div
-                    key={title}
-                    className="rounded-2xl border border-outline-variant/20 bg-surface-container/70 p-4 text-left shadow-lg shadow-black/10 backdrop-blur-md"
-                  >
-                    <p className="font-headline-md text-[18px] text-on-surface">{title}</p>
-                    <p className="mt-1 font-label-sm text-label-sm text-on-surface-variant leading-relaxed">{detail}</p>
-                  </div>
-                ))}
               </div>
-            </div>
 
             <div className="relative">
               <div className="rounded-[2rem] border border-outline-variant/20 bg-surface-container/80 p-4 shadow-2xl shadow-black/20 backdrop-blur-md overflow-hidden">
                 <div className="rounded-[1.5rem] border border-outline-variant/20 bg-gradient-to-br from-surface-container-highest via-surface-container to-surface-container-low p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-label-sm text-label-sm uppercase tracking-[0.18em] text-primary">Featured Event</p>
+                      <p className="font-label-sm text-label-sm uppercase tracking-[0.18em] text-primary">Next Up</p>
                       <h2 className="mt-2 font-headline-md text-headline-md-mobile text-on-surface">
                         {featuredEvent ? featuredEvent.title : "Your next event"}
                       </h2>

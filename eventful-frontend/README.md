@@ -1,73 +1,73 @@
-# React + TypeScript + Vite
+# Eventful — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**→ https://eventful.fly.dev**
 
-Currently, two official plugins are available:
+React + TypeScript + Vite frontend for Eventful, an event ticketing platform.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prerequisites
 
-## React Compiler
+- Node.js >= 18
+- pnpm
+- Backend server running (see `eventful-backend/`)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Setup
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server proxies API requests to `http://localhost:3000` by default. If the backend runs on a different port, update `VITE_API_URL` in `.env`:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+VITE_API_URL=http://localhost:3000
+```
+
+## Running
+
+```bash
+pnpm dev       # dev server with HMR
+pnpm build     # production build to dist/
+pnpm preview   # preview production build
+```
+
+## Project Structure
+
+```
+src/
+  assets/       Static assets (images, icons)
+  components/   Reusable UI components
+  contexts/     React contexts (auth, toast)
+  lib/          API client, types, helpers
+  pages/        Route-level page components
+```
+
+## Pages
+
+| Route                 | Page              | Auth     | Role        |
+| --------------------- | ----------------- | -------- | ----------- |
+| `/`                   | Landing           | No       | —           |
+| `/auth`               | Sign In / Sign Up | No       | —           |
+| `/explore`            | Browse Events     | No       | —           |
+| `/event/:id`          | Event Details     | No       | —           |
+| `/payment/callback`   | Payment Confirm   | No*      | —           |
+| `/ticket`             | My Tickets        | Yes      | EVENTEE     |
+| `/ticket/:id`         | Ticket Detail     | Yes      | EVENTEE     |
+| `/profile`            | Profile           | Yes      | Any         |
+| `/reminders`          | Reminders         | Yes      | Any         |
+| `/dashboard`          | Creator Dashboard | Yes      | CREATOR     |
+| `/manage/events`      | Manage Events     | Yes      | CREATOR     |
+| `/manage/tickets/:id` | Manage Tickets    | Yes      | CREATOR     |
+| `/scan`               | Scan Tickets      | Yes      | CREATOR     |
+
+*\* Shows "Sign in to confirm payment" if unauthenticated.*
+
+## Key Libraries
+
+- **React Router** — client-side routing
+- **Axios** — API client with auth interceptor + error normalization
+- **Tailwind CSS** — utility-first styling
+- **Material Symbols** — icon set
+
+## Error Handling
+
+All API errors flow through `src/lib/api.ts` which normalizes them to `err.friendlyMessage`. Every page uses this instead of extracting raw `err.response.data.message`. Network errors and throttling responses are also mapped to readable strings.

@@ -6,6 +6,7 @@ import { useToast } from "../contexts/ToastContext";
 import api from "../lib/api";
 import type { Event, PaginatedEventsResponse } from "../lib/types";
 import ShareButton from "../components/ShareButton";
+import { SkeletonExploreEvents } from "../components/Skeleton";
 
 const CATEGORIES = [
   { label: "All Events", value: "" },
@@ -28,19 +29,25 @@ export default function ExploreEvents() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { toast } = useToast();
 
-  const fetchEvents = (p: number, cat: string, q: string) => {
+  const fetchEvents = (p: number, cat: string, q: string, loc: string, dFrom: string, dTo: string) => {
     setLoading(true);
     const params = new URLSearchParams();
     params.set("page", String(p));
     params.set("limit", String(PAGE_SIZE));
     if (cat) params.set("category", cat);
     if (q) params.set("search", q);
+    if (loc) params.set("location", loc);
+    if (dFrom) params.set("dateFrom", dFrom);
+    if (dTo) params.set("dateTo", dTo);
 
     api.get<PaginatedEventsResponse>(`/events?${params.toString()}`)
       .then((res) => {
@@ -53,21 +60,21 @@ export default function ExploreEvents() {
   };
 
   useEffect(() => {
-    fetchEvents(1, activeCategory, search);
-  }, [activeCategory]);
+    fetchEvents(1, activeCategory, search, location, dateFrom, dateTo);
+  }, [activeCategory, location, dateFrom, dateTo]);
 
   const handleSearch = (val: string) => {
     setSearch(val);
     if (searchRef.current) clearTimeout(searchRef.current);
     searchRef.current = setTimeout(() => {
       setPage(1);
-      fetchEvents(1, activeCategory, val);
+      fetchEvents(1, activeCategory, val, location, dateFrom, dateTo);
     }, 300);
   };
 
   const goToPage = (p: number) => {
     setPage(p);
-    fetchEvents(p, activeCategory, search);
+    fetchEvents(p, activeCategory, search, location, dateFrom, dateTo);
   };
 
   const formatDate = (dateStr: string) => {
@@ -169,12 +176,41 @@ export default function ExploreEvents() {
             />
             {search && (
               <button
-                onClick={() => { setSearch(""); fetchEvents(1, activeCategory, ""); }}
+                onClick={() => { setSearch(""); fetchEvents(1, activeCategory, "", location, dateFrom, dateTo); }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             )}
+          </div>
+        </div>
+
+        <div className="px-container-margin pb-2 flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              <span className="material-symbols-outlined text-[18px]">location_on</span>
+            </span>
+            <input
+              type="text"
+              placeholder="City or venue..."
+              value={location}
+              onChange={(e) => { setLocation(e.target.value); setPage(1); }}
+              className="w-full bg-surface-container border border-outline-variant/50 rounded-xl pl-9 pr-3 py-2.5 text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors font-body-md text-body-md text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+              className="flex-1 sm:w-auto bg-surface-container border border-outline-variant/50 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors [color-scheme:dark]"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+              className="flex-1 sm:w-auto bg-surface-container border border-outline-variant/50 rounded-xl px-3 py-2.5 text-on-surface text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors [color-scheme:dark]"
+            />
           </div>
         </div>
 
@@ -197,9 +233,7 @@ export default function ExploreEvents() {
         </section>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <SkeletonExploreEvents />
         ) : events.length === 0 ? (
           <div className="text-center py-20">
             <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">event_busy</span>

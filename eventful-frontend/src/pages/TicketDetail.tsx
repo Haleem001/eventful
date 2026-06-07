@@ -4,6 +4,7 @@ import { useToast } from "../contexts/ToastContext";
 import BottomNav from "../components/BottomNav";
 import api from "../lib/api";
 import type { Ticket } from "../lib/types";
+import { SkeletonTicketDetail } from "../components/Skeleton";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   PAID: { label: "Paid", cls: "bg-primary/10 text-primary border border-primary/20" },
@@ -28,21 +29,7 @@ export default function TicketDetail() {
       .finally(() => setLoading(false));
   }, [ticketId, toast]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-surface text-on-surface antialiased flex flex-col">
-        <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex items-center px-container-margin py-stack-sm h-16">
-          <button onClick={() => navigate("/ticket")} className="text-on-surface-variant hover:opacity-80 transition-opacity p-2 rounded-full">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-          <h1 className="font-headline-md text-headline-md-mobile font-black text-primary ml-2">Ticket</h1>
-        </header>
-        <main className="flex-grow flex items-center justify-center pt-16">
-          <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </main>
-      </div>
-    );
-  }
+  if (loading) return <SkeletonTicketDetail />;
 
   if (!ticket) {
     return (

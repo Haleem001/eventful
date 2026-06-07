@@ -5,6 +5,7 @@ import { useToast } from "../contexts/ToastContext";
 import BottomNav from "../components/BottomNav";
 import api from "../lib/api";
 import type { Ticket } from "../lib/types";
+import { SkeletonMyTickets } from "../components/Skeleton";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   PAID: { label: "Paid", cls: "bg-primary/10 text-primary border border-primary/20" },
@@ -84,8 +85,8 @@ export default function MyTicket() {
           <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Tickets</h1>
           <div className="w-10" />
         </header>
-        <main className="flex-grow flex items-center justify-center pt-20">
-          <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <main className="flex-grow pt-16">
+          <SkeletonMyTickets />
         </main>
         <BottomNav />
       </div>
@@ -177,9 +178,9 @@ export default function MyTicket() {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu((o) => !o)}
-              className="text-on-surface-variant hover:opacity-80 transition-opacity"
+              className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/50 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <span className="material-symbols-outlined">account_circle</span>
+              <span className="material-symbols-outlined text-sm text-on-surface">person</span>
             </button>
             {showUserMenu && (
               <>
@@ -188,6 +189,20 @@ export default function MyTicket() {
                   <div className="px-4 py-3 border-b border-outline-variant/20">
                     <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
                   </div>
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate("/profile"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { setShowUserMenu(false); navigate("/reminders"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">notifications</span>
+                    Reminders
+                  </button>
                   <button
                     onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
                     className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"

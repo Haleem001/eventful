@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -23,6 +24,7 @@ export class PaymentService {
     private readonly remindersService: RemindersService,
     @Inject(EventsService)
     private readonly eventsService: EventsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private get secretKey(): string {
@@ -161,9 +163,10 @@ export class PaymentService {
         metaEventId,
       );
 
+      const event = await this.eventsService.findOne(metaEventId);
+
       if (reminderKey) {
         try {
-          const event = await this.eventsService.findOne(metaEventId);
           const remindAt = new Date(new Date(event.date).getTime() - reminderMs(reminderKey));
           await this.remindersService.create(
             metaEventId,
@@ -175,6 +178,14 @@ export class PaymentService {
           this.logger.warn(`Reminder creation failed for ticket ${reference}: ${err}`);
         }
       }
+
+      this.notificationsService.sendPurchaseConfirmation(
+        verification.email,
+        event.title,
+        reference,
+        event.date,
+        event.venue,
+      ).catch((err) => this.logger.warn(`Confirmation email failed for ${reference}: ${err}`));
 
       return ticket;
     } catch (err: any) {

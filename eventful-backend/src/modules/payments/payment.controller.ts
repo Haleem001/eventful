@@ -21,8 +21,6 @@ import { PaymentService } from './payment.service';
 import { InitializePaymentDto } from './dto/initialize-payment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { EventsService } from '../events/events.service';
-import { TicketsService } from '../tickets/tickets.service';
-import { v4 as uuidv4 } from 'uuid';
 import type { Request } from 'express';
 
 @ApiTags('Payments')
@@ -31,7 +29,6 @@ export class PaymentController {
   constructor(
     private readonly paymentService: PaymentService,
     private readonly eventsService: EventsService,
-    private readonly ticketsService: TicketsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -53,12 +50,9 @@ export class PaymentController {
     @Req() req: any,
   ): Promise<{ authorizationUrl: string; reference: string }> {
     const event = await this.eventsService.findOne(dto.eventId);
-    const reference = `evt_${uuidv4().slice(0, 8)}`;
-
     const result = await this.paymentService.initializePayment(
       req.user.email,
       Number(event.price),
-      reference,
       dto.eventId,
       req.user.id,
       dto.callbackUrl,
@@ -100,28 +94,6 @@ export class PaymentController {
     }
 
     const payload = req.body as any;
-    if (payload.event !== 'charge.success') {
-      return { status: 'ignored' };
-    }
-
-    const { reference, status, metadata } = payload.data;
-    if (status !== 'success') {
-      return { status: 'payment not successful' };
-    }
-
-    const existingTicket = await this.ticketsService.findByReference(reference);
-    if (existingTicket) {
-      return { status: 'duplicate' };
-    }
-
-    await this.ticketsService.create(
-      reference,
-      metadata.eventeeId,
-      metadata.eventId,
-    );
-
-    await this.cacheManager.del(`${metadata.eventeeId}:/api/tickets/user`);
-
-    return { status: 'success' };
+    return this.paymentService.handleWebhook(payload);
   }
 }

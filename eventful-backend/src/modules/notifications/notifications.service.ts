@@ -64,6 +64,42 @@ export class NotificationsService {
     );
   }
 
+  async sendPurchaseConfirmation(
+    to: string,
+    eventTitle: string,
+    reference: string,
+    eventDate: Date,
+    venue: string,
+  ): Promise<void> {
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    await this.send(
+      to,
+      `Your ticket for ${eventTitle} is confirmed!`,
+      `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2>🎫 Ticket Confirmed</h2>
+          <p>Your payment was successful. Here are the details:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px 0; color: #666;">Event</td><td style="padding: 8px 0; font-weight: 600;">${eventTitle}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666;">Date</td><td style="padding: 8px 0;">${formattedDate}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666;">Venue</td><td style="padding: 8px 0;">📍 ${venue}</td></tr>
+            <tr><td style="padding: 8px 0; color: #666;">Reference</td><td style="padding: 8px 0; font-family: monospace; font-size: 13px;">${reference.toUpperCase()}</td></tr>
+          </table>
+          <hr />
+          <p style="color: #666;">Show your QR code at the door to check in. See you there! — Eventful Team</p>
+        </div>
+      `,
+    );
+  }
+
   async sendVerificationEmail(to: string, token: string): Promise<void> {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
     const link = `${frontendUrl}/verify-email?token=${token}&email=${encodeURIComponent(to)}`;

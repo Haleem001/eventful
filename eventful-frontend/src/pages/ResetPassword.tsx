@@ -38,7 +38,16 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
-        <div className="text-center">
+        <div className="w-full max-w-sm">
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+          </div>
+          <div className="text-center">
           <span className="material-symbols-outlined text-5xl text-error mb-4">error_outline</span>
           <p className="font-body-md text-body-md text-on-surface mb-2">Invalid reset link</p>
           <p className="font-body-md text-sm text-on-surface-variant mb-6">No reset token found in the URL.</p>
@@ -50,22 +59,33 @@ export default function ResetPassword() {
           </button>
         </div>
       </div>
+    </div>
     );
   }
 
   if (done) {
     return (
       <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-primary mb-4">check_circle</span>
-          <p className="font-headline-md text-headline-md-mobile text-on-surface mb-2">Password reset!</p>
-          <p className="font-body-md text-sm text-on-surface-variant mb-6">Your password has been updated.</p>
-          <button
-            onClick={() => navigate("/auth")}
-            className="bg-primary-container text-on-primary-container font-body-md text-body-md font-bold py-3 px-6 rounded-xl transition-all active:scale-95"
-          >
-            Sign In
-          </button>
+        <div className="w-full max-w-sm">
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+          </div>
+          <div className="text-center">
+            <span className="material-symbols-outlined text-5xl text-primary mb-4">check_circle</span>
+            <p className="font-headline-md text-headline-md-mobile text-on-surface mb-2">Password reset!</p>
+            <p className="font-body-md text-sm text-on-surface-variant mb-6">Your password has been updated.</p>
+            <button
+              onClick={() => navigate("/auth")}
+              className="bg-primary-container text-on-primary-container font-body-md text-body-md font-bold py-3 px-6 rounded-xl transition-all active:scale-95"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -74,6 +94,14 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
       <div className="w-full max-w-sm">
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="material-symbols-outlined text-primary text-3xl">lock</span>
@@ -124,5 +152,5 @@ export default function ResetPassword() {
         </form>
       </div>
     </div>
-  );
-}
+    );
+  }

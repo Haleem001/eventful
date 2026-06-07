@@ -54,8 +54,11 @@ export default function CreatorDashboard() {
   return (
     <div className="min-h-screen bg-background text-on-background">
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
-        <button className="hover:opacity-80 transition-opacity p-2 rounded-full hover:bg-surface-container">
-          <span className="material-symbols-outlined text-primary">bar_chart</span>
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+        >
+          <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">Eventful</h1>
         <div className="relative">

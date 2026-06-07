@@ -44,9 +44,17 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
       <div className="w-full max-w-sm">
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="material-symbols-outlined text-primary text-3xl">location_on</span>
+            <span className="material-symbols-outlined text-primary text-3xl">local_activity</span>
             <span className="font-headline-lg text-headline-md font-black text-primary">Eventful</span>
           </div>
           <p className="font-body-md text-sm text-on-surface-variant">

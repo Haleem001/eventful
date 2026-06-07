@@ -75,7 +75,12 @@ export default function MyTicket() {
     return (
       <div className="min-h-screen bg-surface text-on-surface antialiased flex flex-col relative overflow-x-hidden">
         <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
-          <div className="w-10" />
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
           <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Tickets</h1>
           <div className="w-10" />
         </header>
@@ -91,7 +96,12 @@ export default function MyTicket() {
     return (
       <div className="min-h-screen bg-surface text-on-surface antialiased flex flex-col relative overflow-x-hidden">
         <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
-          <div className="w-10" />
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
           <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Tickets</h1>
           <div className="relative">
             <button
@@ -108,14 +118,14 @@ export default function MyTicket() {
                     <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
                   </div>
                   <button
-                    onClick={() => { setShowUserMenu(false); navigate("/profile"); }}
+                    onClick={() => { setShowUserMenu((o) => !o); navigate("/profile"); }}
                     className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
                   >
                     <span className="material-symbols-outlined text-[18px]">person</span>
                     Profile
                   </button>
                   <button
-                    onClick={() => { setShowUserMenu(false); navigate("/reminders"); }}
+                    onClick={() => { setShowUserMenu((o) => !o); navigate("/reminders"); }}
                     className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
                   >
                     <span className="material-symbols-outlined text-[18px]">notifications</span>
@@ -155,36 +165,41 @@ export default function MyTicket() {
   const pastTickets = tickets.filter((t) => t.status !== "PAID" || t.isScanned);
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface antialiased flex flex-col relative overflow-x-hidden">
-      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
-        <div className="w-10" />
-        <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Tickets</h1>
-        <div className="relative">
+      <div className="min-h-screen bg-surface text-on-surface antialiased flex flex-col relative overflow-x-hidden">
+        <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-container-margin py-stack-sm">
           <button
-            onClick={() => setShowUserMenu((o) => !o)}
-            className="text-on-surface-variant hover:opacity-80 transition-opacity"
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
           >
-            <span className="material-symbols-outlined">account_circle</span>
+            <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          {showUserMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-              <div className="absolute right-0 top-10 z-50 bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl min-w-[180px] overflow-hidden">
-                <div className="px-4 py-3 border-b border-outline-variant/20">
-                  <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
+          <h1 className="font-headline-md text-headline-md-mobile font-black text-primary">My Tickets</h1>
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu((o) => !o)}
+              className="text-on-surface-variant hover:opacity-80 transition-opacity"
+            >
+              <span className="material-symbols-outlined">account_circle</span>
+            </button>
+            {showUserMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
+                <div className="absolute right-0 top-10 z-50 bg-surface-container border border-outline-variant/30 rounded-xl shadow-2xl min-w-[180px] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-outline-variant/20">
+                    <p className="font-label-sm text-label-sm text-on-surface-variant truncate">{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
+                    className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">logout</span>
+                    Sign Out
+                  </button>
                 </div>
-                <button
-                  onClick={() => { logout(); setShowUserMenu(false); navigate("/"); }}
-                  className="w-full flex items-center gap-2 px-4 py-3 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">logout</span>
-                  Sign Out
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </header>
+              </>
+            )}
+          </div>
+        </header>
 
       <main className="flex-grow flex flex-col w-full max-w-md mx-auto px-container-margin pt-20 pb-32 z-10 relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/10 blur-[100px] rounded-full pointer-events-none z-0"></div>

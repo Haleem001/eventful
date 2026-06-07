@@ -33,7 +33,16 @@ export default function VerifyEmail() {
 
   return (
     <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
-      <div className="w-full max-w-sm text-center">
+      <div className="w-full max-w-sm">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-surface-container/60 flex items-center justify-center text-on-surface hover:opacity-80 transition-opacity active:scale-95"
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+        </div>
+        <div className="text-center">
         {status === "loading" && (
           <>
             <span className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin inline-block mb-4" />
@@ -70,5 +79,6 @@ export default function VerifyEmail() {
         )}
       </div>
     </div>
+  </div>
   );
 }

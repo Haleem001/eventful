@@ -21,7 +21,7 @@ export default function ManageTickets() {
     Promise.all([
       api.get<Event>(`/events/${eventId}`).then((r) => setEvent(r.data)),
       api.get<TicketWithAttendee[]>(`/tickets/event/${eventId}`).then((r) => setTickets(r.data)),
-    ]).catch((err) => toast(err?.response?.data?.message || "Failed to load tickets", "error"))
+    ]).catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   }, [eventId, user]);
 

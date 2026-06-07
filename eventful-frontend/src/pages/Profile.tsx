@@ -29,7 +29,7 @@ export default function Profile() {
         setProfile(res.data);
         setName(res.data.name || "");
       })
-      .catch(() => toast("Failed to load profile", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   }, [user, toast]);
 
@@ -40,7 +40,7 @@ export default function Profile() {
       await api.patch("/users/me", { name });
       toast("Profile updated", "success");
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Failed to update profile", "error");
+      toast(err.friendlyMessage, "error");
     }
     setSaving(false);
   };
@@ -55,7 +55,7 @@ export default function Profile() {
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Failed to change password", "error");
+      toast(err.friendlyMessage, "error");
     }
     setChangingPassword(false);
   };

@@ -27,7 +27,7 @@ export default function MyTicket() {
     setLoading(true);
     api.get<Ticket[]>("/tickets/user")
       .then((res) => setTickets(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => toast(err?.response?.data?.message || "Failed to load tickets", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   }, [user, toast]);
 
@@ -42,7 +42,7 @@ export default function MyTicket() {
         loadTickets();
       })
       .catch((err) => {
-        toast(err?.response?.data?.message || "Payment verification failed", "error");
+        toast(err.friendlyMessage, "error");
         setSearchParams({});
       })
       .finally(() => {

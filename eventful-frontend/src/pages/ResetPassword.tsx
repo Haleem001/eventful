@@ -30,7 +30,7 @@ export default function ResetPassword() {
       setDone(true);
       toast("Password reset successfully", "success");
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Invalid or expired token", "error");
+      toast(err.friendlyMessage, "error");
     }
     setLoading(false);
   };

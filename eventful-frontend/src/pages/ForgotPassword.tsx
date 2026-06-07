@@ -17,7 +17,7 @@ export default function ForgotPassword() {
       await api.post("/auth/forgot-password", { email });
       setSent(true);
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Something went wrong", "error");
+      toast(err.friendlyMessage, "error");
     }
     setLoading(false);
   };

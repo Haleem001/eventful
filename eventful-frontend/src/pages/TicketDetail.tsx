@@ -24,7 +24,7 @@ export default function TicketDetail() {
     setLoading(true);
     api.get<Ticket>(`/tickets/${ticketId}`)
       .then((res) => setTicket(res.data))
-      .catch(() => toast("Failed to load ticket", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   }, [ticketId, toast]);
 
@@ -173,7 +173,7 @@ export default function TicketDetail() {
                   const res = await api.get<Ticket>(`/tickets/${ticketId}`);
                   setTicket(res.data);
                 } catch (err: any) {
-                  toast(err?.response?.data?.message || "Failed to cancel ticket", "error");
+                  toast(err.friendlyMessage, "error");
                 }
                 setCancelling(false);
               }}

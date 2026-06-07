@@ -78,7 +78,7 @@ export default function ScanTickets() {
         setResult(data);
         toast("Ticket verified successfully", "success");
       } catch (err: any) {
-        const msg = err?.response?.data?.message;
+        const msg = err.friendlyMessage;
         if (msg?.includes("already")) {
           setError("Ticket already verified");
           toast("Ticket already verified", "error");

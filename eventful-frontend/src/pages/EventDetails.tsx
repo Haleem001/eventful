@@ -38,7 +38,7 @@ export default function EventDetails() {
       });
       window.location.href = data.authorizationUrl;
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Payment initiation failed", "error");
+      toast(err.friendlyMessage, "error");
     }
     setBuying(false);
   };

@@ -48,7 +48,7 @@ export default function ExploreEvents() {
         setTotal(res.data.total);
         setTotalPages(res.data.totalPages);
       })
-      .catch((err) => toast(err?.response?.data?.message || "Failed to load events", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   };
 

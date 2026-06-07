@@ -36,7 +36,7 @@ export default function ManageEvents() {
   const fetchEvents = () => {
     api.get<Event[]>("/events/creator")
       .then((res) => setEvents(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => toast(err?.response?.data?.message || "Failed to load events", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   };
 
@@ -81,7 +81,7 @@ export default function ManageEvents() {
       setShowForm(false);
       fetchEvents();
     } catch (err: any) {
-      toast(err?.response?.data?.message || "Failed to save event", "error");
+      toast(err.friendlyMessage, "error");
     }
     setSaving(false);
   };
@@ -90,7 +90,7 @@ export default function ManageEvents() {
     if (!window.confirm(`Delete "${ev.title}"? This cannot be undone.`)) return;
     api.delete(`/events/${ev.id}`)
       .then(() => { toast("Event deleted", "success"); fetchEvents(); })
-      .catch((err) => toast(err?.response?.data?.message || "Failed to delete", "error"));
+      .catch((err) => toast(err.friendlyMessage, "error"));
   };
 
   return (

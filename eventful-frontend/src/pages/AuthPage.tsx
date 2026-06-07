@@ -33,8 +33,7 @@ export default function AuthPage() {
       setLoading(false);
       return;
     } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      const display = Array.isArray(msg) ? msg[0] : msg || "Something went wrong";
+      const display = err.friendlyMessage;
       setError(display);
       toast(display, "error");
     }

@@ -15,7 +15,7 @@ export default function Reminders() {
     setLoading(true);
     api.get<Reminder[]>("/reminders")
       .then((res) => setReminders(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => toast(err?.response?.data?.message || "Failed to load reminders", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   };
 
@@ -30,7 +30,7 @@ export default function Reminders() {
         toast("Reminder removed", "success");
         loadReminders();
       })
-      .catch((err) => toast(err?.response?.data?.message || "Failed to delete reminder", "error"));
+      .catch((err) => toast(err.friendlyMessage, "error"));
   };
 
   if (loading) {

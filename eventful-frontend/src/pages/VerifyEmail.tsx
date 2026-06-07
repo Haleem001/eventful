@@ -27,7 +27,7 @@ export default function VerifyEmail() {
       })
       .catch((err) => {
         setStatus("error");
-        setMessage(err?.response?.data?.message || "Verification failed.");
+        setMessage(err?.friendlyMessage || "Verification failed.");
       });
   }, [token, email]);
 

@@ -25,7 +25,7 @@ export default function CreatorDashboard() {
     const qs = params.toString();
     api.get<CreatorAnalytics>(`/analytics/creator${qs ? `?${qs}` : ""}`)
       .then((res) => setAnalytics(res.data))
-      .catch((err) => toast(err?.response?.data?.message || "Failed to load analytics", "error"))
+      .catch((err) => toast(err.friendlyMessage, "error"))
       .finally(() => setLoading(false));
   }, [user, toast]);
 

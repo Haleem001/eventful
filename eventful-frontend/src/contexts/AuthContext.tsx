@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import api from "../lib/api";
 import { decodeToken } from "../lib/jwt";
 import type { User, AuthResponse, Role } from "../lib/types";
@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (email: string, password: string, role?: Role, name?: string) => Promise<User>;
   logout: () => void;
+  setAuthFromToken: (token: string) => User;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -54,8 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const setAuthFromToken = useCallback((token: string) => {
+    localStorage.setItem("accessToken", token);
+    const u = userFromToken(token)!;
+    setUser(u);
+    return u;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, setAuthFromToken }}>
       {children}
     </AuthContext.Provider>
   );

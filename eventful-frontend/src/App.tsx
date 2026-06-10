@@ -18,6 +18,7 @@ import VerifyEmail from "./pages/VerifyEmail"
 import Profile from "./pages/Profile"
 import Reminders from "./pages/Reminders"
 import PaymentCallback from "./pages/PaymentCallback"
+import GoogleCallback from "./pages/GoogleCallback"
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/callback" element={<GoogleCallback />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
             <Route path="/explore" element={<ExploreEvents />} />
             <Route path="/event/:id" element={<EventDetails />} />

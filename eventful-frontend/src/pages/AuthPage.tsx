@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import type { Role } from "../lib/types";
@@ -8,7 +8,8 @@ export default function AuthPage() {
   const { login, register } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname !== "/auth/signup");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -177,7 +178,7 @@ export default function AuthPage() {
         <p className="text-center mt-6 font-body-md text-sm text-on-surface-variant">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => { setIsLogin(!isLogin); setError(""); }}
+            onClick={() => { setError(""); navigate(isLogin ? "/auth/signup" : "/auth/login"); }}
             className="text-primary font-semibold hover:underline"
           >
             {isLogin ? "Register" : "Sign In"}

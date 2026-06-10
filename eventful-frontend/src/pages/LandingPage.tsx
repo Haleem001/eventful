@@ -70,13 +70,13 @@ export default function LandingPage() {
             ) : (
               <>
                 <button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/auth/login")}
                   className="font-body-md text-body-md border border-outline-variant text-on-surface-variant px-5 py-2 rounded-full hover:border-primary hover:text-primary transition-colors"
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => navigate("/auth/signup")}
                   className="font-body-md text-body-md bg-primary-container text-on-primary-container font-bold px-5 py-2 rounded-full hover:opacity-90 transition-all active:scale-95"
                 >
                   Sign Up
@@ -138,7 +138,7 @@ export default function LandingPage() {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  navigate("/auth");
+                  navigate("/auth/signup");
                 }}
                 className="font-body-md text-body-md bg-primary-container text-on-primary-container font-bold px-10 py-4 rounded-full transition-all active:scale-95"
               >
@@ -147,7 +147,7 @@ export default function LandingPage() {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  navigate("/auth");
+                  navigate("/auth/login");
                 }}
                 className="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors"
               >

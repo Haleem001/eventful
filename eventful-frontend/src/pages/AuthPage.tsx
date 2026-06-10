@@ -45,7 +45,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-background flex flex-col items-center justify-center px-container-margin">
+    <div className="min-h-screen bg-background text-on-background flex flex-col items-center overflow-y-auto py-8 px-container-margin">
       <div className="w-full max-w-sm">
         <div className="mb-4">
           <button

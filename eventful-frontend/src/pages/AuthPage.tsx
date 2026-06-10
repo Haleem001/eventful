@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -9,13 +9,17 @@ export default function AuthPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLogin, setIsLogin] = useState(location.pathname !== "/auth/signup");
+  const isLogin = location.pathname !== "/auth/signup";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("EVENTEE");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setError("");
+  }, [location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +34,7 @@ export default function AuthPage() {
       }
       await register(email, password, role, name || undefined);
       toast("Account created! Check your email to verify.", "success");
-      setIsLogin(true);
-      setLoading(false);
+      navigate("/auth/login");
       return;
     } catch (err: any) {
       const display = err.friendlyMessage;

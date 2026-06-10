@@ -19,6 +19,7 @@ import Profile from "./pages/Profile"
 import Reminders from "./pages/Reminders"
 import PaymentCallback from "./pages/PaymentCallback"
 import GoogleCallback from "./pages/GoogleCallback"
+import NotFound from "./pages/NotFound"
 
 function App() {
   return (
@@ -101,6 +102,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

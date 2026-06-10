@@ -149,6 +149,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Invalid email or password.');
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password.');
@@ -188,10 +192,51 @@ export class AuthService {
     return { message: 'If that email exists, a verification link has been sent.' };
   }
 
+  async validateGoogleUser(profile: any): Promise<User> {
+    const { id, emails, displayName, photos } = profile;
+    const email = emails[0].value;
+    const googleName = displayName || email.split('@')[0];
+
+    let user = await this.userRepository.findOne({ where: { googleId: id } });
+    if (user) return user;
+
+    user = await this.userRepository.findOne({ where: { email } });
+    if (user) {
+      user.googleId = id;
+      user.authProvider = 'google';
+      user.name = user.name || googleName;
+      user.avatarUrl = photos?.[0]?.value;
+      if (!user.isVerified) user.isVerified = true;
+      return this.userRepository.save(user);
+    }
+
+    const newUser = this.userRepository.create({
+      email,
+      name: googleName,
+      googleId: id,
+      authProvider: 'google',
+      isVerified: true,
+      avatarUrl: photos?.[0]?.value,
+    });
+    return this.userRepository.save(newUser);
+  }
+
+  async googleLogin(user: User): Promise<{ accessToken: string; user: Omit<User, 'passwordHash'> }> {
+    const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
+    const accessToken = this.jwtService.sign(payload);
+
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    return { accessToken, user: userWithoutPassword };
+  }
+
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new UnauthorizedException('User not found.');
+    }
+
+    if (!user.passwordHash) {
+      throw new BadRequestException('Cannot change password for Google-authenticated accounts.');
     }
 
     const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);

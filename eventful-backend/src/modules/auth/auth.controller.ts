@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Query, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Query, UseGuards, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiCreatedResponse,
@@ -19,6 +19,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { User } from './entities/user.entity';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('Auth')
@@ -113,6 +114,22 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Invalid or expired token.' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Redirect to Google OAuth consent screen' })
+  async googleAuth() {
+    // Guard redirects to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  async googleAuthRedirect(@Req() req: any, @Res() res: any) {
+    const result = await this.authService.googleLogin(req.user);
+    const frontendUrl = process.env.CORS_ORIGIN?.split(',')[0] ?? 'http://localhost:5173';
+    return res.redirect(`${frontendUrl}/auth/callback?token=${result.accessToken}`);
   }
 
   @Post('change-password')

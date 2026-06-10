@@ -19,8 +19,8 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   name?: string;
 
-  @Column({ type: 'varchar' })
-  passwordHash!: string;
+  @Column({ type: 'varchar', nullable: true })
+  passwordHash?: string;
 
   @Column({ type: 'boolean', default: false })
   isVerified!: boolean;
@@ -33,6 +33,15 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   resetTokenExpiry?: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  googleId?: string;
+
+  @Column({ type: 'varchar', default: 'local' })
+  authProvider!: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarUrl?: string;
 
   @Column({
     type: 'enum',

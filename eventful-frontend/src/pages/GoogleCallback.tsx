@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { decodeToken } from "../lib/jwt";
 
 export default function GoogleCallback() {
   const navigate = useNavigate();
@@ -14,13 +15,20 @@ export default function GoogleCallback() {
     calledRef.current = true;
 
     const token = searchParams.get("token");
+    const isNewUser = searchParams.get("isNewUser") === "true";
+
     if (!token) {
       setError("No authentication token received.");
       return;
     }
     try {
-      const user = setAuthFromToken(token);
-      navigate(user.role === "CREATOR" ? "/dashboard" : "/explore", { replace: true });
+      setAuthFromToken(token);
+      if (isNewUser) {
+        navigate("/auth/choose-role", { replace: true });
+      } else {
+        const decoded = decodeToken(token);
+        navigate(decoded?.role === "CREATOR" ? "/dashboard" : "/explore", { replace: true });
+      }
     } catch {
       setError("Failed to authenticate. Please try again.");
     }

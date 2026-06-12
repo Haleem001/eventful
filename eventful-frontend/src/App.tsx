@@ -19,6 +19,7 @@ import Profile from "./pages/Profile"
 import Reminders from "./pages/Reminders"
 import PaymentCallback from "./pages/PaymentCallback"
 import GoogleCallback from "./pages/GoogleCallback"
+import ChooseRole from "./pages/ChooseRole"
 import NotFound from "./pages/NotFound"
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/callback" element={<GoogleCallback />} />
+            <Route path="/auth/choose-role" element={<ChooseRole />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
             <Route path="/explore" element={<ExploreEvents />} />
             <Route path="/event/:id" element={<EventDetails />} />

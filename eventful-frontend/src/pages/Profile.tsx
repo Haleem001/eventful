@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -13,7 +13,7 @@ interface ProfileData {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +22,9 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const deleteRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -166,7 +169,69 @@ export default function Profile() {
             </button>
           </form>
         </div>
+
+        <div ref={deleteRef} className="z-10 mt-6 w-full">
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="w-full text-error font-body-md text-body-md py-3 rounded-xl border border-error/30 hover:bg-error/10 transition-all"
+          >
+            Delete Account
+          </button>
+        </div>
       </main>
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{ background: "rgba(11, 19, 38, 0.6)", backdropFilter: "blur(4px)" }}
+          onClick={() => { if (!deleting) setConfirmDelete(false); }}
+        >
+          <div
+            className="w-full max-w-sm bg-surface-container rounded-2xl border border-outline-variant/20 p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="material-symbols-outlined text-5xl text-error mb-3" style={{ fontVariationSettings: "'FILL' 1" }}>
+              warning
+            </span>
+            <h2 className="font-headline-md text-headline-md-mobile text-on-surface mb-2">Delete account?</h2>
+            <p className="font-body-md text-sm text-on-surface-variant mb-6">
+              This will permanently deactivate your account. Your events and tickets will be preserved but you won't be able to sign in again.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 border border-outline-variant/50 text-on-surface py-2.5 rounded-xl font-label-sm text-label-sm hover:bg-surface-container transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await api.delete("/auth/account");
+                    logout();
+                    navigate("/");
+                    toast("Account deleted.", "success");
+                  } catch (err: any) {
+                    toast(err.friendlyMessage, "error");
+                    setDeleting(false);
+                    setConfirmDelete(false);
+                  }
+                }}
+                disabled={deleting}
+                className="flex-1 bg-error text-on-error py-2.5 rounded-xl font-label-sm text-label-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <span className="w-4 h-4 border-2 border-on-error border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

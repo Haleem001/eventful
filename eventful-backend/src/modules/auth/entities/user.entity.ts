@@ -56,4 +56,7 @@ export class User {
 
   @CreateDateColumn()
   createdAt!: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  deletedAt?: Date;
 }

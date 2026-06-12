@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import * as crypto from 'crypto';
 import { User } from './entities/user.entity';
+import { Role } from './enums/role.enum';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -35,10 +37,33 @@ export class AuthService {
     const existingUser = await this.userRepository.findOne({
       where: { email },
     });
-    if (existingUser) {
+    if (existingUser && !existingUser.deletedAt) {
       throw new ConflictException(
         'Registration request could not be processed.',
       );
+    }
+
+    if (existingUser?.deletedAt) {
+      existingUser.deletedAt = undefined as any;
+      existingUser.passwordHash = await bcrypt.hash(password, 10);
+      existingUser.role = role ?? Role.EVENTEE;
+      existingUser.name = name;
+      existingUser.isVerified = false;
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      existingUser.verificationToken = await bcrypt.hash(verificationToken, 10);
+      existingUser.googleId = undefined as any;
+      existingUser.authProvider = 'local';
+      existingUser.avatarUrl = undefined as any;
+      await this.userRepository.save(existingUser);
+
+      try {
+        await this.notificationsService.sendVerificationEmail(email, verificationToken);
+      } catch (err) {
+        this.logger.warn(`Verification email not sent to ${email}: ${err}`);
+      }
+
+      const { passwordHash: _, verificationToken: __, ...userWithoutPassword } = existingUser;
+      return userWithoutPassword;
     }
 
     const saltRounds = 10;
@@ -145,7 +170,7 @@ export class AuthService {
     const { email, password } = loginDto;
 
     const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
@@ -192,22 +217,34 @@ export class AuthService {
     return { message: 'If that email exists, a verification link has been sent.' };
   }
 
-  async validateGoogleUser(profile: any): Promise<User> {
+  async validateGoogleUser(profile: any): Promise<{ user: User; isNewUser: boolean }> {
     const { id, emails, displayName, photos } = profile;
     const email = emails[0].value;
     const googleName = displayName || email.split('@')[0];
 
     let user = await this.userRepository.findOne({ where: { googleId: id } });
-    if (user) return user;
+    if (user) {
+      if (user.deletedAt) {
+        user.deletedAt = undefined as any;
+        user.name = googleName;
+        user.avatarUrl = photos?.[0]?.value;
+        const saved = await this.userRepository.save(user);
+        return { user: saved, isNewUser: true };
+      }
+      return { user, isNewUser: false };
+    }
 
     user = await this.userRepository.findOne({ where: { email } });
     if (user) {
+      const wasDeleted = !!user.deletedAt;
       user.googleId = id;
       user.authProvider = 'google';
       user.name = user.name || googleName;
       user.avatarUrl = photos?.[0]?.value;
+      if (wasDeleted) user.deletedAt = undefined as any;
       if (!user.isVerified) user.isVerified = true;
-      return this.userRepository.save(user);
+      const saved = await this.userRepository.save(user);
+      return { user: saved, isNewUser: wasDeleted };
     }
 
     const newUser = this.userRepository.create({
@@ -218,7 +255,30 @@ export class AuthService {
       isVerified: true,
       avatarUrl: photos?.[0]?.value,
     });
-    return this.userRepository.save(newUser);
+    const saved = await this.userRepository.save(newUser);
+    return { user: saved, isNewUser: true };
+  }
+
+  async chooseRole(userId: string, role: Role): Promise<Omit<User, 'passwordHash'>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found.');
+    if (user.authProvider !== 'google') throw new BadRequestException('Only Google accounts can use this.');
+    if (user.role !== Role.EVENTEE) throw new BadRequestException('Role has already been set.');
+
+    user.role = role;
+    const saved = await this.userRepository.save(user);
+    const { passwordHash: _, ...profile } = saved;
+    return profile;
+  }
+
+  async deleteAccount(userId: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found.');
+    if (user.deletedAt) throw new BadRequestException('Account already deleted.');
+
+    user.deletedAt = new Date();
+    await this.userRepository.save(user);
+    return { message: 'Account deleted.' };
   }
 
   async googleLogin(user: User): Promise<{ accessToken: string; user: Omit<User, 'passwordHash'> }> {

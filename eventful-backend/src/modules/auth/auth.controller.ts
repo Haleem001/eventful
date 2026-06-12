@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Query, UseGuards, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Delete, Query, UseGuards, Req, Res, ParseEnumPipe } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiCreatedResponse,
@@ -21,6 +21,7 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { User } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Role } from './enums/role.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -127,9 +128,33 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback' })
   async googleAuthRedirect(@Req() req: any, @Res() res: any) {
-    const result = await this.authService.googleLogin(req.user);
+    const { user: googleUser, isNewUser } = req.user;
+    const result = await this.authService.googleLogin(googleUser);
     const frontendUrl = process.env.CORS_ORIGIN?.split(',')[0] ?? 'http://localhost:5173';
-    return res.redirect(`${frontendUrl}/auth/callback?token=${result.accessToken}`);
+    return res.redirect(
+      `${frontendUrl}/auth/callback?token=${result.accessToken}&isNewUser=${isNewUser}`,
+    );
+  }
+
+  @Post('choose-role')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set role for new Google-authenticated users' })
+  async chooseRole(
+    @Body('role', new ParseEnumPipe(Role)) role: Role,
+    @Req() req: any,
+  ) {
+    return this.authService.chooseRole(req.user.id, role);
+  }
+
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete authenticated user account (soft delete)' })
+  async deleteAccount(@Req() req: any) {
+    return this.authService.deleteAccount(req.user.id);
   }
 
   @Post('change-password')
